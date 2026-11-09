@@ -50,6 +50,27 @@
     }).then(function (r) { if (r.error) throw r.error; });
   }
 
+  // Logs in with the numeric code from the sign-in email.
+  function verifyCode(email, token) {
+    return client().then(function (c) {
+      return c.auth.verifyOtp({ email: email, token: token, type: "email" });
+    }).then(function (r) { if (r.error || !r.data || !r.data.session) throw r.error || new Error("Invalid code"); memberPromise = null; return r.data.session; });
+  }
+
+  // Calls fn once this browser is signed in, including when the sign-in
+  // happened in another tab (for example, the email link opened a new tab).
+  function onSignIn(fn) {
+    var fired = false;
+    function fire() { if (!fired) { fired = true; memberPromise = null; fn(); } }
+    function check() { session().then(function (s) { if (s) fire(); }); }
+    client().then(function (c) {
+      c.auth.onAuthStateChange(function (event, s) { if (s && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) fire(); });
+    }).catch(function () {});
+    window.addEventListener("storage", function (e) { if (e.key && e.key.indexOf("sb-") === 0) check(); });
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) check(); });
+  }
+
   function signOut() {
     return client().then(function (c) { return c.auth.signOut(); }).then(function () { memberPromise = null; });
   }
@@ -87,6 +108,10 @@
   }
 
   window.NO = { client: client, session: session, membership: membership, sendLink: sendLink,
+    verifyCode: verifyCode, onSignIn: onSignIn,
     signOut: signOut, openPortal: openPortal, prefillCheckout: prefillCheckout, updateNav: updateNav };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", updateNav); else updateNav();
+  // Keep "Log in" / "Account" in sync if the person signs in from another tab.
+  window.addEventListener("focus", updateNav);
+  window.addEventListener("storage", function (e) { if (e.key && e.key.indexOf("sb-") === 0) updateNav(); });
 })();

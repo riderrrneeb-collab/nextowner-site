@@ -46,3 +46,7 @@ input[type=email]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .empty{padding:18px;border-radius:20px;background:var(--card);border:1px dashed var(--line);color:var(--muted);margin:18px 0}
 .foot{margin-top:18px;font-size:13px;color:var(--muted);text-align:center}
 .foot a,.foot button{color:var(--muted);background:none;border:0;font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+input.code{width:100%;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  font:inherit;font-size:24px;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
+input.code:focus{outline:2px solid var(--accent);outline-offset:1px}
+[hidden]{display:none!important}

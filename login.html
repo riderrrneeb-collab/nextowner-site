@@ -12,11 +12,17 @@
 <main>
   <div class="panel">
     <h1>Log in or sign up</h1>
-    <p class="sub">Enter your email and we'll send you a sign-in link. No password needed. Use the same email you used at checkout so we can find your plan.</p>
+    <p class="sub" id="sub">Enter your email and we'll send you a sign-in code. No password needed. Use the same email you used at checkout so we can find your plan.</p>
     <form id="f">
       <label for="email">Email</label>
       <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
-      <button class="btn" id="go" type="submit">Email me a sign-in link</button>
+      <button class="btn" id="go" type="submit">Email me a sign-in code</button>
+    </form>
+    <form id="cf" hidden>
+      <label for="code">Sign-in code</label>
+      <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required placeholder="123456" class="code">
+      <button class="btn" id="verify" type="submit">Log in</button>
+      <p class="foot" style="text-align:left;margin-top:12px">Or just click the link in the email; this page will log you in automatically. <button type="button" id="again">Use a different email</button></p>
     </form>
     <div class="msg" id="msg" role="status"></div>
   </div>
@@ -25,20 +31,44 @@
 <script src="/auth.js"></script>
 <script>
 (function(){
-  var f=document.getElementById('f'), go=document.getElementById('go'), msg=document.getElementById('msg');
-  NO.session().then(function(s){ if(s) location.replace('/account'); });
+  var f=document.getElementById('f'), cf=document.getElementById('cf'), go=document.getElementById('go'),
+      verify=document.getElementById('verify'), msg=document.getElementById('msg'), sub=document.getElementById('sub'),
+      code=document.getElementById('code'), email='';
+  function done(){ location.replace('/account'); }
+  NO.session().then(function(s){ if(s) done(); });
+  // Logs this tab in as soon as the email link is opened in another tab.
+  NO.onSignIn(done);
+
   f.addEventListener('submit',function(e){
     e.preventDefault();
-    var email=document.getElementById('email').value.trim();
+    email=document.getElementById('email').value.trim();
     go.disabled=true; msg.className='msg'; msg.textContent='Sending…';
     NO.sendLink(email).then(function(){
-      msg.className='msg ok';
-      msg.textContent='Check your inbox for a sign-in link from NextOwner. It can take a minute; check spam too.';
+      f.hidden=true; cf.hidden=false; msg.textContent='';
+      sub.textContent='We emailed a code to '+email+'. Enter it below to log in. It can take a minute; check spam too.';
+      code.focus();
     }).catch(function(err){
       msg.className='msg err';
       msg.textContent=(err && err.message) || 'Something went wrong. Try again.';
       go.disabled=false;
     });
+  });
+
+  cf.addEventListener('submit',function(e){
+    e.preventDefault();
+    var c=code.value.replace(/\D/g,'');
+    if(c.length<6){ msg.className='msg err'; msg.textContent='Enter the code from the email.'; return; }
+    verify.disabled=true; msg.className='msg'; msg.textContent='Logging in…';
+    NO.verifyCode(email,c).then(done).catch(function(){
+      msg.className='msg err'; msg.textContent='That code didn\'t work or has expired. Check it, or use a different email to get a new one.';
+      verify.disabled=false;
+    });
+  });
+  code.addEventListener('input',function(){ code.value=code.value.replace(/\D/g,''); });
+
+  document.getElementById('again').addEventListener('click',function(){
+    cf.hidden=true; f.hidden=false; go.disabled=false; msg.textContent=''; code.value='';
+    sub.textContent='Enter your email and we\'ll send you a sign-in code.';
   });
 })();
 </script>

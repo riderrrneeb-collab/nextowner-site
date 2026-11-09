@@ -24,7 +24,8 @@ Static pages plus three small Netlify Functions that power member logins.
    - `STRIPE_SECRET_KEY` = the restricted key from step 4
 
    Then trigger a redeploy.
-6. **Test:** go to mynextowner.com/login, sign in with the email you used for a test purchase, and check that the plan shows on /account.
+6. **Sign-in codes:** in Supabase, Authentication → Email Templates, add `Your code: {{ .Token }}` to the **Magic Link** template (and the **Confirm signup** template, which first-time users may get). Visitors can then type the code on the tab they started from instead of clicking the link.
+7. **Test:** go to mynextowner.com/login, sign in with the email you used for a test purchase, and check that the plan shows on /account.
 
 ## How it works
 
