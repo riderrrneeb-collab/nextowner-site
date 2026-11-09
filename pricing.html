@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing · NextOwner</title>
+<meta name="description" content="List your business on NextOwner. Simple monthly plans, no commission, cancel anytime.">
+<style>
+  :root{
+    --bg:#f5f7fb; --ink:#0f172a; --muted:#5b6474; --glass:rgba(255,255,255,.55);
+    --edge:rgba(255,255,255,.75); --shadow:0 10px 40px rgba(15,23,42,.10);
+    --accent:#0a84ff; --accent-ink:#fff; --line:rgba(15,23,42,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b0d12; --ink:#eef2f8; --muted:#9aa4b5; --glass:rgba(30,34,44,.55);
+      --edge:rgba(255,255,255,.10); --shadow:0 10px 40px rgba(0,0,0,.45); --line:rgba(255,255,255,.08); }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.55;z-index:-1;pointer-events:none}
+  .b1{width:520px;height:520px;background:#7cc4ff;top:-160px;left:-120px}
+  .b2{width:460px;height:460px;background:#c7b8ff;top:40%;right:-140px}
+  .b3{width:380px;height:380px;background:#9ff0d4;bottom:-140px;left:20%}
+  @media (prefers-color-scheme: dark){.blob{opacity:.25}}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+  .logo{font-weight:700;font-size:20px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+  .navlink{color:var(--muted);text-decoration:none;font-size:15px}
+  header{text-align:center;padding:48px 0 28px}
+  h1{font-size:clamp(34px,6vw,56px);letter-spacing:-.035em;line-height:1.05;margin:0 0 14px}
+  .sub{color:var(--muted);font-size:clamp(16px,2.2vw,19px);max-width:620px;margin:0 auto}
+  .toggle{display:inline-flex;margin:28px auto 0;padding:4px;border-radius:999px;background:var(--glass);
+    border:1px solid var(--edge);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow)}
+  .toggle button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:15px;padding:9px 18px;border-radius:999px;cursor:pointer}
+  .toggle button.on{background:var(--ink);color:var(--bg)}
+  .save{font-size:12px;color:#16a34a;font-weight:600;margin-left:4px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:36px 0 18px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;padding:28px;border-radius:28px;background:var(--glass);border:1px solid var(--edge);
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);box-shadow:var(--shadow);
+    display:flex;flex-direction:column}
+  .card.pop{outline:2px solid var(--accent)}
+  .tag{position:absolute;top:-12px;left:28px;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px}
+  .card h3{margin:0 0 4px;font-size:20px;letter-spacing:-.01em}
+  .card .desc{color:var(--muted);font-size:14px;margin:0 0 18px;min-height:42px}
+  .price{font-size:44px;font-weight:700;letter-spacing:-.03em}
+  .per{color:var(--muted);font-size:15px;font-weight:500}
+  .note{color:var(--muted);font-size:13px;min-height:20px;margin-bottom:18px}
+  ul{list-style:none;padding:0;margin:0 0 24px;flex:1}
+  li{padding:8px 0 8px 26px;position:relative;font-size:15px;border-top:1px solid var(--line)}
+  li:first-child{border-top:0}
+  li::before{content:"";position:absolute;left:2px;top:14px;width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#fff,var(--accent) 70%)}
+  .btn{display:block;text-align:center;text-decoration:none;font-weight:600;font-size:16px;padding:14px 18px;border-radius:999px;
+    background:var(--ink);color:var(--bg);transition:transform .15s ease,opacity .15s ease}
+  .btn:hover{transform:translateY(-1px);opacity:.92}
+  .pop .btn{background:var(--accent);color:var(--accent-ink)}
+  .buyer{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:center;margin:28px 0}
+  @media (max-width:900px){.buyer{grid-template-columns:1fr}}
+  .buyer h2{margin:0 0 8px;font-size:28px;letter-spacing:-.02em}
+  .buyer p{color:var(--muted);margin:0}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:36px 0}
+  @media (max-width:700px){.facts{grid-template-columns:1fr}}
+  .fact{padding:20px;border-radius:22px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+  .fact b{display:block;margin-bottom:4px}
+  .fact span{color:var(--muted);font-size:14px}
+  footer{text-align:center;color:var(--muted);font-size:14px;padding:30px 0 50px}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="/">NextOwner</a>
+    <a class="navlink" data-auth-link href="/login">Log in</a>
+  </nav>
+
+  <header>
+    <h1>Sell your business.<br>Keep 100% of the sale.</h1>
+    <p class="sub">A flat monthly plan to list your business. No commission, no hidden fees, cancel anytime.</p>
+    <div class="toggle" role="group" aria-label="Billing period">
+      <button type="button" class="on" data-period="monthly">Monthly</button>
+      <button type="button" data-period="yearly">Yearly <span class="save">2 months free</span></button>
+    </div>
+  </header>
+
+  <section class="grid" aria-label="Seller plans">
+    <div class="card">
+      <h3>Starter</h3>
+      <p class="desc">Everything you need to get your business in front of buyers.</p>
+      <div><span class="price" data-m="$29" data-y="$290">$29</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
+      <div class="note" data-m="" data-y="That's about $24/month"></div>
+      <ul><li>One business listing</li><li>Video tour on your listing</li><li>Verified-seller badge</li></ul>
+      <a class="btn" data-m="https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00" data-y="https://buy.stripe.com/7sY7sKahcg3T25h1IP3sI01" href="https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00">List my business</a>
+    </div>
+    <div class="card pop">
+      <span class="tag">Most visibility for the price</span>
+      <h3>Featured</h3>
+      <p class="desc">Get seen first by local buyers searching your area.</p>
+      <div><span class="price" data-m="$59" data-y="$590">$59</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
+      <div class="note" data-m="" data-y="That's about $49/month"></div>
+      <ul><li>Everything in Starter</li><li>Boosted placement in local search and on the map</li><li>Listing analytics</li></ul>
+      <a class="btn" data-m="https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02" data-y="https://buy.stripe.com/eVq7sK7503h7fW7afl3sI03" href="https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02">Get Featured</a>
+    </div>
+    <div class="card">
+      <h3>Premium</h3>
+      <p class="desc">Maximum exposure on NextOwner and beyond.</p>
+      <div><span class="price" data-m="$119" data-y="$1,190">$119</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
+      <div class="note" data-m="" data-y="That's about $99/month"></div>
+      <ul><li>Everything in Featured</li><li>Top placement</li><li>Included in "best value in your area" rankings</li><li>Featured in NextOwner social content</li></ul>
+      <a class="btn" data-m="https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04" data-y="https://buy.stripe.com/8x28wOexsg3TfW71IP3sI05" href="https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04">Go Premium</a>
+    </div>
+  </section>
+
+  <section class="card buyer" aria-label="Buyer plan">
+    <div>
+      <h2>Looking to buy?</h2>
+      <p>Browsing NextOwner is free. Buyer Premium unlocks ✦ Best Picks, which ranks every listing by return on investment, payback time and fit for your budget and location, alerts you to new listings early, and gives you a verified-buyer badge sellers trust.</p>
+    </div>
+    <div>
+      <div><span class="price" data-m="$15" data-y="$150">$15</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
+      <div class="note" data-m="" data-y="That's about $12.50/month"></div>
+      <a class="btn" data-m="https://buy.stripe.com/4gM6oG7503h711d4V13sI06" data-y="https://buy.stripe.com/8x2fZg2OK7xn6lx87d3sI07" href="https://buy.stripe.com/4gM6oG7503h711d4V13sI06">Get Buyer Premium</a>
+    </div>
+  </section>
+
+  <section class="facts">
+    <div class="fact"><b>No commission</b><span>You pay a flat plan price. Every dollar of your sale stays yours.</span></div>
+    <div class="fact"><b>Cancel anytime</b><span>Change or cancel your plan yourself, no phone calls. Access lasts through your paid period.</span></div>
+    <div class="fact"><b>Secure checkout</b><span>Payments are processed by Stripe. Have a promo code? Enter it at checkout.</span></div>
+  </section>
+
+  <footer>
+    Questions? <a href="mailto:mynextownerofficial@gmail.com">mynextownerofficial@gmail.com</a>
+    · <a href="/account">Manage your plan</a>
+  </footer>
+</div>
+<script>
+  (function(){
+    var btns=document.querySelectorAll('.toggle button');
+    function set(p){
+      btns.forEach(function(b){b.classList.toggle('on',b.dataset.period===p)});
+      var k=p==='yearly'?'y':'m';
+      document.querySelectorAll('[data-m]').forEach(function(el){
+        var v=el.getAttribute('data-'+k);
+        if(el.tagName==='A'){el.href=v}else{el.textContent=v}
+      });
+    }
+    btns.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.period)})});
+  })();
+</script>
+<script src="/auth.js"></script>
+</body>
+</html>

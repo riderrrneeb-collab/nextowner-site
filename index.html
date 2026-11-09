@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NextOwner · Businesses for sale near you</title>
+<meta name="description" content="Browse small businesses for sale near you. List yours for a flat monthly price with no commission.">
+<style>
+  :root{
+    --bg:#f3f6fb; --ink:#0f172a; --muted:#5b6474; --glass:rgba(255,255,255,.6);
+    --edge:rgba(255,255,255,.8); --shadow:0 10px 40px rgba(15,23,42,.10);
+    --accent:#0a84ff; --line:rgba(15,23,42,.08); --card:rgba(255,255,255,.72);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0b0d12; --ink:#eef2f8; --muted:#9aa4b5; --glass:rgba(30,34,44,.6);
+      --edge:rgba(255,255,255,.10); --shadow:0 10px 40px rgba(0,0,0,.45); --line:rgba(255,255,255,.08); --card:rgba(28,32,42,.75); }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;overflow-x:hidden}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;color:var(--ink);
+    background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body.locked{overflow:hidden}
+  .blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.5;z-index:0;pointer-events:none}
+  .b1{width:520px;height:520px;background:#7cc4ff;top:-180px;left:-140px}
+  .b2{width:460px;height:460px;background:#c7b8ff;top:35%;right:-160px}
+  @media (prefers-color-scheme: dark){.blob{opacity:.22}}
+
+  /* ---------- App preview ---------- */
+  .app{position:relative;z-index:1;transition:filter .9s ease, transform .9s ease}
+  body.frosted .app{filter:blur(9px) saturate(120%)}
+  .top{position:sticky;top:0;z-index:5;padding:14px 16px;background:var(--glass);border-bottom:1px solid var(--edge);
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+  .topin{max-width:1200px;margin:0 auto;display:flex;gap:14px;align-items:center}
+  .logo{font-weight:700;font-size:20px;letter-spacing:-.02em;white-space:nowrap}
+  .search{flex:1;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--muted);font-size:15px;min-width:0}
+  .search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);outline:none}
+  .search input::placeholder{color:var(--muted)}
+  .search:focus-within{border-color:var(--accent)}
+  .sell{padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;white-space:nowrap;
+    text-decoration:none}
+  @media (max-width:560px){.sell{padding:9px 12px;font-size:13px}.logo{font-size:17px}.search{padding:9px 12px;font-size:14px}}
+  .chips{max-width:1200px;margin:12px auto 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{padding:7px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font:inherit;font-size:14px;white-space:nowrap;
+    color:var(--ink);cursor:pointer}
+  .chip:hover{border-color:var(--accent)}
+  .card{cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,outline-color .15s ease;outline:2px solid transparent}
+  .card:hover{transform:translateY(-2px)}
+  .card.hl{outline-color:var(--accent)}
+  .ver{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:#16a34a;vertical-align:middle}
+  .pin{cursor:pointer;border:0;font-family:inherit;transition:transform .15s ease,background .15s ease}
+  .pin:hover,.pin.hl{background:var(--accent);color:#fff;z-index:2;transform:translate(-50%,-100%) scale(1.08)}
+  .pin:hover::after,.pin.hl::after{border-top-color:var(--accent)}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 10px}
+  .count{color:var(--muted);font-size:14px;font-weight:500;margin-left:6px}
+  /* Listing detail sheet */
+  .shade{position:fixed;inset:0;z-index:15;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:opacity .3s ease}
+  body.detail .shade{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;z-index:16;left:50%;top:50%;width:min(620px,calc(100% - 32px));max-height:calc(100vh - 32px);overflow:auto;
+    transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.2,1);
+    border-radius:28px;background:var(--glass);border:1px solid var(--edge);box-shadow:0 30px 80px rgba(15,23,42,.3);
+    backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%)}
+  body.detail .sheet{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .sheet .hero{height:240px;background-size:cover;background-position:center;position:relative}
+  .sheet .in{padding:22px 24px 24px}
+  .sheet h2{margin:0 0 2px;font-size:26px;letter-spacing:-.02em}
+  .sheet .loc{margin-bottom:16px}
+  .sheet .nums{margin-bottom:16px}
+  .sheet .nums b{font-size:20px}
+  .sheet p{color:var(--muted);line-height:1.55;margin:0 0 18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row .btn2{flex:1;min-width:160px;text-align:center;padding:13px;border-radius:999px;font-weight:600;font-size:15px;cursor:pointer;border:0;font-family:inherit}
+  .btn2.pri{background:var(--accent);color:#fff}
+  .btn2.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  .sheet .x{background:rgba(255,255,255,.85);color:#0f172a;z-index:2}
+  .chip.on{background:var(--accent);color:#fff;border-color:transparent}
+
+  .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:1fr 380px;gap:18px}
+  @media (max-width:960px){.main{grid-template-columns:1fr}.map{order:-1;height:220px!important;position:relative!important;top:0!important}}
+  .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+  .head h2{margin:0;font-size:22px;letter-spacing:-.02em}
+  .ex{font-size:12px;color:var(--muted);padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .card{border-radius:22px;overflow:hidden;background:var(--card);border:1px solid var(--edge);box-shadow:var(--shadow)}
+  .img{height:140px;position:relative}
+  .img .badge{position:absolute;left:12px;top:12px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;
+    background:rgba(255,255,255,.85);color:#0f172a}
+  .img .vid{position:absolute;right:12px;bottom:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.85)}
+  .img .vid::after{content:"";position:absolute;left:13px;top:10px;border-left:11px solid #0f172a;border-top:7px solid transparent;border-bottom:7px solid transparent}
+  .body{padding:14px 16px 16px}
+  .body h3{margin:0 0 2px;font-size:17px;letter-spacing:-.01em}
+  .loc{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .nums div{font-size:12px;color:var(--muted)}
+  .nums b{display:block;font-size:15px;color:var(--ink)}
+  .map{position:sticky;top:120px;height:calc(100vh - 150px);border-radius:24px;overflow:hidden;border:1px solid var(--edge);box-shadow:var(--shadow);
+    background:
+      linear-gradient(115deg,transparent 46%,rgba(255,255,255,.55) 47%,rgba(255,255,255,.55) 49%,transparent 50%),
+      linear-gradient(25deg,transparent 60%,rgba(255,255,255,.45) 61%,rgba(255,255,255,.45) 62.5%,transparent 63.5%),
+      linear-gradient(160deg,#cfe8d8 0%,#dfeee4 40%,#cde3f5 70%,#bcd8f2 100%)}
+  @media (prefers-color-scheme: dark){.map{background:
+      linear-gradient(115deg,transparent 46%,rgba(255,255,255,.08) 47%,rgba(255,255,255,.08) 49%,transparent 50%),
+      linear-gradient(25deg,transparent 60%,rgba(255,255,255,.06) 61%,rgba(255,255,255,.06) 62.5%,transparent 63.5%),
+      linear-gradient(160deg,#16261d 0%,#1a2620 40%,#14202e 70%,#111c2a 100%)}}
+  .pin{position:absolute;transform:translate(-50%,-100%);padding:5px 10px;border-radius:999px;background:var(--ink);color:var(--bg);
+    font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);white-space:nowrap}
+  .pin::after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--ink)}
+
+  /* ---------- Frost + prompt ---------- */
+  .veil{position:fixed;inset:0;z-index:20;background:rgba(243,246,251,.25);opacity:0;pointer-events:none;transition:opacity .9s ease}
+  @media (prefers-color-scheme: dark){.veil{background:rgba(11,13,18,.35)}}
+  body.frosted .veil{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:30;left:50%;top:50%;width:min(520px,calc(100% - 32px));max-height:calc(100vh - 32px);overflow:auto;
+    transform:translate(-50%,-44%) scale(.97);opacity:0;pointer-events:none;transition:opacity .6s ease .35s, transform .6s cubic-bezier(.2,.8,.2,1) .35s;
+    padding:28px;border-radius:30px;background:var(--glass);border:1px solid var(--edge);box-shadow:0 30px 80px rgba(15,23,42,.25);
+    backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%)}
+  body.frosted .modal{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .modal h1{margin:0 0 8px;font-size:clamp(26px,5vw,32px);line-height:1.1;letter-spacing:-.03em}
+  .modal .sub{margin:0 0 20px;color:var(--muted);font-size:15px;line-height:1.5}
+  .tabs{display:flex;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line);margin-bottom:16px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:9px;border-radius:999px;cursor:pointer}
+  .tabs button.on{background:var(--ink);color:var(--bg)}
+  .plan{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:18px;background:var(--card);
+    border:1px solid var(--line);margin-bottom:10px;text-decoration:none;color:inherit;transition:transform .15s ease,border-color .15s ease}
+  .plan:hover{transform:translateY(-1px);border-color:var(--accent)}
+  .plan.pop{border:2px solid var(--accent)}
+  .plan b{display:block;font-size:16px}
+  .plan small{color:var(--muted);font-size:13px}
+  .plan .p{text-align:right;white-space:nowrap;font-weight:700;font-size:18px}
+  .plan .p small{display:block;font-weight:500}
+  .cta{display:block;text-align:center;margin-top:6px;padding:14px;border-radius:999px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:16px}
+  .fine{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
+  .fine a{color:var(--muted)}
+  .pane[hidden]{display:none}
+  .x{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .x:hover{border-color:var(--accent)}
+  .modal h1{padding-right:40px}
+  .img{background-size:cover!important;background-position:center!important}
+  .img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.25))}
+  .credit{max-width:1200px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12px;text-align:center}
+  .credit a{color:var(--muted)}
+  .sellbtn{border:0;cursor:pointer;font:inherit}
+  .login{color:var(--ink);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap;padding:10px 4px}
+  @media (max-width:560px){.login{font-size:13px;padding:9px 2px}}
+
+  /* Best Picks finder */
+  .chip.ai{background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff;border-color:transparent;font-weight:600}
+  body.picks .pshade{opacity:1;pointer-events:auto}
+  .pshade{position:fixed;inset:0;z-index:17;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:opacity .3s ease}
+  .picks-panel{position:fixed;z-index:18;left:50%;top:50%;width:min(760px,calc(100% - 24px));max-height:calc(100vh - 24px);overflow:auto;
+    transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.2,1);
+    padding:24px;border-radius:28px;background:var(--glass);border:1px solid var(--edge);box-shadow:0 30px 80px rgba(15,23,42,.3);
+    backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%)}
+  body.picks .picks-panel{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .picks-panel h2{margin:0 0 4px;font-size:26px;letter-spacing:-.02em;padding-right:44px}
+  .picks-panel .lead{color:var(--muted);margin:0 0 18px;font-size:15px}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  @media (max-width:640px){.form{grid-template-columns:1fr}}
+  .fld label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .fld input,.fld select{width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:15px}
+  .fld .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .fld.full{grid-column:1/-1}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+  .seg button.on{background:var(--ink);color:var(--bg);border-color:transparent}
+  .fin{display:none;grid-template-columns:repeat(3,1fr);gap:10px}
+  .fin.show{display:grid}
+  @media (max-width:640px){.fin{grid-template-columns:1fr}}
+  .go{width:100%;padding:14px;border:0;border-radius:999px;background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+  .results{margin-top:18px}
+  .pick{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:14px;border-radius:20px;background:var(--card);border:1px solid var(--line);margin-bottom:10px;cursor:pointer}
+  .pick:hover{border-color:var(--accent)}
+  .pick .th{border-radius:14px;background-size:cover;background-position:center;height:96px;align-self:start;position:relative}
+  @media (max-width:640px){.pick{grid-template-columns:72px 1fr}.pick .th{height:72px}}
+  .rank{position:absolute;left:6px;top:6px;width:26px;height:26px;border-radius:50%;background:#fff;color:#0f172a;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .pick h3{margin:0;font-size:16px}
+  .pick .loc{margin:2px 0 8px}
+  .score{float:right;font-weight:700;font-size:14px;padding:3px 10px;border-radius:999px;background:rgba(22,163,74,.12);color:#16a34a}
+  .met{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .met b{color:var(--ink)}
+  .why{font-size:13px;line-height:1.45;color:var(--muted)}
+  .locked{position:relative}
+  .lockwrap{position:relative}
+  .lockwrap .blurred{filter:blur(6px);pointer-events:none;user-select:none}
+  .unlock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:16px}
+  .unlock b{font-size:17px}
+  .unlock a{padding:12px 20px;border-radius:999px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600}
+  .unlock small{color:var(--muted)}
+  .nores{color:var(--muted);text-align:center;padding:20px}
+  .assume{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+
+<div class="app">
+  <div class="top">
+    <div class="topin">
+      <div class="logo">NextOwner</div>
+      <label class="search">⌕ <input id="q" type="search" placeholder="Search businesses, cities or states" aria-label="Search listings"></label>
+      <a class="login" data-auth-link href="/login">Log in</a>
+      <button type="button" class="sell sellbtn" id="openPlans">Sell a business</button>
+    </div>
+    <div class="chips">
+      <button type="button" class="chip ai" id="openPicks">✦ Best Picks</button>
+      <button type="button" class="chip on" data-f="all">All</button>
+      <button type="button" class="chip" data-f="cat:Food & drink">Food &amp; drink</button>
+      <button type="button" class="chip" data-f="cat:Fitness">Fitness</button>
+      <button type="button" class="chip" data-f="cat:Services">Services</button>
+      <button type="button" class="chip" data-f="cat:Retail">Retail</button>
+      <button type="button" class="chip" data-f="cat:Routes">Routes</button>
+      <button type="button" class="chip" data-f="under100">Under $100K</button>
+      <button type="button" class="chip" data-f="verified">Verified only</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <section>
+      <div class="head"><h2>Businesses for sale <span class="count" id="count"></span></h2><span class="ex">Example listings</span></div>
+      <div class="grid" id="grid"></div>
+    </section>
+    <aside class="map" id="map"></aside>
+  </div>
+  <p class="credit">Example listings for preview only. Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</p>
+</div>
+
+<div class="shade" id="shade"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="dName">
+  <button type="button" class="x" id="closeSheet" aria-label="Close">×</button>
+  <div class="hero" id="dHero"></div>
+  <div class="in">
+    <h2 id="dName"></h2>
+    <div class="loc" id="dLoc"></div>
+    <div class="nums">
+      <div>Asking<b id="dAsk"></b></div><div>Revenue<b id="dRev"></b></div><div>Cash flow<b id="dCf"></b></div>
+    </div>
+    <p id="dDesc"></p>
+    <div class="row">
+      <button type="button" class="btn2 pri" id="dContact">Contact seller</button>
+      <button type="button" class="btn2 sec" id="dVideo">Watch video tour</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="pshade" id="pshade"></div>
+<div class="picks-panel" id="picksPanel" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+  <button type="button" class="x" id="closePicks" aria-label="Close">×</button>
+  <h2 id="pTitle">✦ Best Picks for you</h2>
+  <p class="lead">Tell us your budget and where you want to own. We rank every listing by return on investment, payback time and fit.</p>
+  <div class="form">
+    <div class="fld">
+      <label for="pBudget">Your budget ($)</label>
+      <input id="pBudget" type="number" min="0" step="1000" value="150000" inputmode="numeric">
+      <div class="hint" id="pBudgetHint">Max purchase price</div>
+    </div>
+    <div class="fld">
+      <label>How will you pay?</label>
+      <div class="seg" id="pPay">
+        <button type="button" class="on" data-v="cash">All cash</button>
+        <button type="button" data-v="loan">With a loan</button>
+      </div>
+    </div>
+    <div class="fld full fin" id="pFin">
+      <div class="fld"><label for="pDown">Down payment (%)</label><input id="pDown" type="number" min="5" max="100" value="10"></div>
+      <div class="fld"><label for="pRate">Loan rate (%)</label><input id="pRate" type="number" min="0" max="30" step="0.25" value="10.5"></div>
+      <div class="fld"><label for="pYears">Loan term (years)</label><input id="pYears" type="number" min="1" max="25" value="10"></div>
+    </div>
+    <div class="fld">
+      <label for="pLoc">Location</label>
+      <select id="pLoc"></select>
+    </div>
+    <div class="fld">
+      <label for="pRad">Distance</label>
+      <select id="pRad">
+        <option value="50">Within 50 miles</option><option value="150">Within 150 miles</option>
+        <option value="500" selected>Within 500 miles</option><option value="99999">Anywhere</option>
+      </select>
+    </div>
+    <div class="fld full">
+      <label>Business types</label>
+      <div class="seg" id="pCats">
+        <button type="button" class="on" data-v="Food & drink">Food &amp; drink</button>
+        <button type="button" class="on" data-v="Fitness">Fitness</button>
+        <button type="button" class="on" data-v="Services">Services</button>
+        <button type="button" class="on" data-v="Routes">Routes</button>
+        <button type="button" class="on" data-v="Retail">Retail</button>
+      </div>
+    </div>
+    <div class="fld full">
+      <label>What matters most?</label>
+      <div class="seg" id="pPri">
+        <button type="button" class="on" data-v="roi">Highest return</button>
+        <button type="button" data-v="payback">Fastest payback</button>
+        <button type="button" data-v="safe">Steadiest business</button>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="go" id="pGo">Find my best picks</button>
+  <div class="results" id="pResults"></div>
+</div>
+
+<div class="veil"></div>
+
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <button type="button" class="x" id="closePlans" aria-label="Close">×</button>
+  <h1 id="mt">See every business for sale near you.</h1>
+  <p class="sub">NextOwner is a marketplace for small businesses: food trucks, studios, gyms, service routes and more. List yours for one flat monthly price, with no commission.</p>
+
+  <div class="tabs" role="tablist">
+    <button type="button" class="on" data-tab="sell">I'm selling</button>
+    <button type="button" data-tab="buy">I'm buying</button>
+  </div>
+
+  <div class="pane" data-pane="sell">
+    <a class="plan" href="https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00">
+      <div><b>Starter</b><small>One listing, video tour, verified badge</small></div>
+      <div class="p">$29<small>/month</small></div>
+    </a>
+    <a class="plan pop" href="https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02">
+      <div><b>Featured</b><small>Boosted local and map placement, analytics</small></div>
+      <div class="p">$59<small>/month</small></div>
+    </a>
+    <a class="plan" href="https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04">
+      <div><b>Premium</b><small>Top placement, best-value rankings, social feature</small></div>
+      <div class="p">$119<small>/month</small></div>
+    </a>
+  </div>
+
+  <div class="pane" data-pane="buy" hidden>
+    <a class="plan pop" href="https://buy.stripe.com/4gM6oG7503h711d4V13sI06">
+      <div><b>Buyer Premium</b><small>✦ Best Picks: every listing ranked by return on investment for your budget and location, early alerts on new listings, verified-buyer badge</small></div>
+      <div class="p">$15<small>/month</small></div>
+    </a>
+  </div>
+
+  <div class="fine">
+    Cancel anytime · Secure checkout by Stripe · Promo codes accepted at checkout<br>
+    <a href="/pricing">Compare plans and yearly pricing (2 months free)</a> ·
+    <a href="/account" data-auth-link>Log in</a>
+  </div>
+</div>
+
+<script src="/auth.js"></script>
+<script>
+(function(){
+  // Example listings for the preview (not real businesses).
+  var L=[
+    {n:"Taco Food Truck",loc:"Denver, CO",lat:39.74,lng:-104.99,ask:140,rev:142,cf:51,cat:"Food & drink",g:["#ffb36b","#ff6b8b"],x:42,y:30,ph:"photo-1519861155730-0b5fbf0dd889",v:true,
+     d:"Fully equipped truck with a loyal lunch crowd and two recurring brewery spots. Owner works 4 days a week; recipes, permits and social accounts transfer with the sale."},
+    {n:"Boutique Yoga Studio",loc:"Austin, TX",lat:30.27,lng:-97.74,ask:175,rev:188,cf:62,cat:"Fitness",g:["#8ec5ff","#b49cff"],x:60,y:58,ph:"photo-1761971975962-9cc397e2ba2a",v:true,
+     d:"Bright 1,800 sq ft studio with about 220 active members and six contract instructors. Lease has four years remaining."},
+    {n:"Residential Lawn Care Route",loc:"Charlotte, NC",lat:35.23,lng:-80.84,ask:125,rev:121,cf:47,cat:"Routes",g:["#9be7a8","#3fb8a3"],x:76,y:44,ph:"photo-1458245201577-fc8a130b8829",v:false,
+     d:"Around 140 recurring residential accounts in tight neighborhoods. Sale includes truck, trailer, two commercial mowers and scheduling software."},
+    {n:"Neighborhood Coffee Bar",loc:"Portland, OR",lat:45.52,lng:-122.68,ask:235,rev:310,cf:78,cat:"Food & drink",g:["#d9a77a","#8a5a3b"],x:18,y:22,ph:"photo-1567880905822-56f8e06fe630",v:true,
+     d:"Corner cafe with strong morning traffic and a wholesale pastry partner. Trained staff of five stays on through the transition."},
+    {n:"24/7 Strength Gym",loc:"Phoenix, AZ",lat:33.45,lng:-112.07,ask:340,rev:420,cf:112,cat:"Fitness",g:["#7f8cff","#3a3f9e"],x:30,y:62,ph:"photo-1623874106686-5be2b325c8f1",v:false,
+     d:"Key-fob access gym with squat racks, platforms and a turf lane. Membership billing is automated; light owner involvement."},
+    {n:"Coin Laundromat",loc:"Columbus, OH",lat:39.96,lng:-83.0,ask:240,rev:205,cf:69,cat:"Services",g:["#a0e9ff","#5aa9e6"],x:70,y:28,ph:"photo-1757233285714-4de702bb8a56",v:true,
+     d:"Thirty washers and dryers, recently upgraded to card readers. Wash-and-fold pickup adds a growing second revenue stream."},
+    {n:"Mobile Dog Grooming Van",loc:"Tampa, FL",lat:27.95,lng:-82.46,ask:95,rev:98,cf:39,cat:"Services",g:["#ffd56b","#ff9f6b"],x:82,y:74,ph:"photo-1597603413826-cd1c06b05222",v:false,
+     d:"Self-contained grooming van with a booked-out schedule and repeat clients every 4 to 6 weeks. Booking app and client list included."},
+    {n:"Snack Vending Route",loc:"Seattle, WA",lat:47.61,lng:-122.33,ask:75,rev:76,cf:29,cat:"Routes",g:["#c3f0ca","#6fcf97"],x:14,y:12,ph:"photo-1681632973141-6aaa0a2dd9f2",v:true,
+     d:"Eighteen machines in offices and gyms, serviced one day a week. Machines are owned outright with cashless readers installed."}
+  ];
+  function money(k){return k>=1000?('$'+(k/1000).toFixed(1).replace('.0','')+'M'):('$'+k+'K')}
+  function photo(x,w,h){return 'url(https://images.unsplash.com/'+x.ph+'?auto=format&fit=crop&w='+w+'&h='+h+'&q=70), linear-gradient(135deg,'+x.g[0]+','+x.g[1]+')'}
+
+  var g=document.getElementById('grid'), m=document.getElementById('map'), count=document.getElementById('count');
+  L.forEach(function(x,i){
+    var c=document.createElement('div'); c.className='card'; c.tabIndex=0; c.setAttribute('role','button');
+    c.setAttribute('aria-label',x.n+', '+x.loc);
+    c.innerHTML='<div class="img" style="background:'+photo(x,800,400)+'"><span class="badge">'+x.cat+'</span><span class="vid"></span></div>'+
+      '<div class="body"><h3>'+x.n+(x.v?'<span class="ver">✓ Verified</span>':'')+'</h3><div class="loc">'+x.loc+'</div>'+
+      '<div class="nums"><div>Asking<b>'+money(x.ask)+'</b></div><div>Revenue<b>'+money(x.rev)+'</b></div><div>Cash flow<b>'+money(x.cf)+'</b></div></div></div>';
+    c.addEventListener('click',function(){openDetail(i)});
+    c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(i)}});
+    c.addEventListener('mouseenter',function(){hl(i,true)}); c.addEventListener('mouseleave',function(){hl(i,false)});
+    g.appendChild(c); x.card=c;
+    var p=document.createElement('button'); p.type='button'; p.className='pin'; p.textContent=money(x.ask);
+    p.setAttribute('aria-label',x.n+', asking '+money(x.ask));
+    p.style.left=x.x+'%'; p.style.top=x.y+'%';
+    p.addEventListener('click',function(){
+      x.card.scrollIntoView({behavior:'smooth',block:'center'}); openDetail(i);
+    });
+    p.addEventListener('mouseenter',function(){hl(i,true)}); p.addEventListener('mouseleave',function(){hl(i,false)});
+    m.appendChild(p); x.pin=p;
+  });
+  var empty=document.createElement('div'); empty.className='empty'; empty.textContent='No listings match. Try another filter or search.';
+  g.appendChild(empty);
+
+  function hl(i,on){L[i].card.classList.toggle('hl',on); L[i].pin.classList.toggle('hl',on)}
+
+  // Filters and search
+  var filter='all', q=document.getElementById('q');
+  function apply(){
+    var t=q.value.trim().toLowerCase(), n=0;
+    L.forEach(function(x){
+      var ok=true;
+      if(filter.indexOf('cat:')===0) ok=x.cat===filter.slice(4);
+      else if(filter==='under100') ok=x.ask<100;
+      else if(filter==='verified') ok=x.v;
+      if(ok&&t) ok=(x.n+' '+x.loc+' '+x.cat).toLowerCase().indexOf(t)>-1;
+      x.card.style.display=ok?'':'none'; x.pin.style.display=ok?'':'none'; if(ok)n++;
+    });
+    empty.style.display=n?'none':'';
+    count.textContent='· '+n+(n===1?' result':' results');
+  }
+  document.querySelectorAll('.chip[data-f]').forEach(function(c){
+    c.addEventListener('click',function(){
+      document.querySelectorAll('.chip[data-f]').forEach(function(o){o.classList.toggle('on',o===c)});
+      filter=c.dataset.f; apply();
+    });
+  });
+  q.addEventListener('input',apply);
+  apply();
+
+  // Listing detail
+  var cur=-1;
+  function openDetail(i){
+    var x=L[i]; cur=i;
+    document.getElementById('dHero').style.background=photo(x,1200,500);
+    document.getElementById('dHero').style.backgroundSize='cover';
+    document.getElementById('dHero').style.backgroundPosition='center';
+    document.getElementById('dName').innerHTML=x.n+(x.v?'<span class="ver">✓ Verified</span>':'');
+    document.getElementById('dLoc').textContent=x.loc+' · '+x.cat;
+    document.getElementById('dAsk').textContent=money(x.ask);
+    document.getElementById('dRev').textContent=money(x.rev);
+    document.getElementById('dCf').textContent=money(x.cf);
+    document.getElementById('dDesc').textContent=x.d+' (Example listing.)';
+    document.body.classList.add('detail','locked');
+  }
+  function closeDetail(){document.body.classList.remove('detail'); if(!document.body.classList.contains('frosted'))document.body.classList.remove('locked')}
+  document.getElementById('closeSheet').addEventListener('click',closeDetail);
+  document.getElementById('shade').addEventListener('click',closeDetail);
+  function toBuyerPlans(){closeDetail(); openPlans(); selectTab('buy');}
+  document.getElementById('dContact').addEventListener('click',toBuyerPlans);
+  document.getElementById('dVideo').addEventListener('click',toBuyerPlans);
+
+  // Subscription prompt: frosts the page after a short delay; can be closed.
+  var shown=false, dismissed=false;
+  function openPlans(){shown=true;document.body.classList.add('frosted','locked');}
+  function closePlans(){dismissed=true;document.body.classList.remove('frosted'); if(!document.body.classList.contains('detail'))document.body.classList.remove('locked')}
+  setTimeout(function(){ if(!dismissed && !shown && !document.body.classList.contains('detail') && !document.body.classList.contains('picks')) openPlans(); },2500);
+  document.getElementById('closePlans').addEventListener('click',closePlans);
+  document.getElementById('openPlans').addEventListener('click',function(){openPlans(); selectTab('sell');});
+  document.querySelector('.veil').addEventListener('click',closePlans);
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    if(document.body.classList.contains('frosted'))closePlans(); else closeDetail();
+  });
+
+
+  // ---------- Best Picks: ROI-ranked recommendations ----------
+  var PREVIEW_FREE=1; // picks shown before the Buyer Premium unlock
+  var BUYER_LINK='https://buy.stripe.com/4gM6oG7503h711d4V13sI06';
+  var PLACES=[["Use my location",null,null],["Atlanta, GA",33.75,-84.39],["Austin, TX",30.27,-97.74],["Boston, MA",42.36,-71.06],
+    ["Charlotte, NC",35.23,-80.84],["Chicago, IL",41.88,-87.63],["Columbus, OH",39.96,-83.00],["Dallas, TX",32.78,-96.80],
+    ["Denver, CO",39.74,-104.99],["Los Angeles, CA",34.05,-118.24],["Miami, FL",25.76,-80.19],["Minneapolis, MN",44.98,-93.27],
+    ["Nashville, TN",36.16,-86.78],["New York, NY",40.71,-74.01],["Phoenix, AZ",33.45,-112.07],["Portland, OR",45.52,-122.68],
+    ["Salt Lake City, UT",40.76,-111.89],["San Francisco, CA",37.77,-122.42],["Seattle, WA",47.61,-122.33],["Tampa, FL",27.95,-82.46]];
+  var pLoc=document.getElementById('pLoc'), here=null;
+  PLACES.forEach(function(p,i){var o=document.createElement('option');o.value=i;o.textContent=p[0];pLoc.appendChild(o)});
+  pLoc.value=8; // Denver default
+  pLoc.addEventListener('change',function(){
+    if(pLoc.value!=='0')return;
+    if(!navigator.geolocation){alert('Location is not available in this browser. Pick a city instead.');pLoc.value=8;return}
+    navigator.geolocation.getCurrentPosition(function(pos){here=[pos.coords.latitude,pos.coords.longitude]},
+      function(){alert('We could not get your location. Pick a city instead.');pLoc.value=8});
+  });
+  function seg(id,multi){
+    var el=document.getElementById(id);
+    el.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){
+      if(multi){b.classList.toggle('on')}else{el.querySelectorAll('button').forEach(function(o){o.classList.toggle('on',o===b)})}
+      if(id==='pPay'){var loan=b.dataset.v==='loan';document.getElementById('pFin').classList.toggle('show',loan);
+        document.getElementById('pBudgetHint').textContent=loan?'Cash you can put down':'Max purchase price'}
+    })});
+    return function(){var v=[];el.querySelectorAll('button.on').forEach(function(b){v.push(b.dataset.v)});return multi?v:v[0]};
+  }
+  var getPay=seg('pPay'), getCats=seg('pCats',true), getPri=seg('pPri');
+  function miles(a,b,c,d){var R=3958.8,r=Math.PI/180,x=Math.sin((c-a)*r/2),y=Math.sin((d-b)*r/2);
+    return 2*R*Math.asin(Math.sqrt(x*x+Math.cos(a*r)*Math.cos(c*r)*y*y))}
+  function pmtYear(principal,ratePct,years){ // annual loan payment (monthly amortization x 12)
+    var i=ratePct/100/12,n=years*12; if(principal<=0)return 0; if(i===0)return principal/years;
+    return principal*i/(1-Math.pow(1+i,-n))*12}
+  function pct(x){return (x*100).toFixed(x<0.1&&x>-0.1?1:0)+'%'}
+  function num(id){var v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v}
+
+  function runPicks(){
+    var budget=num('pBudget'), pay=getPay(), cats=getCats(), pri=getPri(), rad=parseFloat(document.getElementById('pRad').value);
+    var down=Math.min(Math.max(num('pDown'),1),100)/100, rate=num('pRate'), yrs=Math.max(num('pYears'),1);
+    var maxPrice=pay==='loan'?budget/down:budget;
+    var origin=pLoc.value==='0'?here:[PLACES[pLoc.value][1],PLACES[pLoc.value][2]];
+    var out=[];
+    L.forEach(function(x,i){
+      var price=x.ask*1000, rev=x.rev*1000, cf=x.cf*1000;
+      if(cats.indexOf(x.cat)<0||price>maxPrice)return;
+      var dist=origin?miles(origin[0],origin[1],x.lat,x.lng):null;
+      if(dist!==null&&dist>rad)return;
+      var roi=cf/price, payback=price/cf, margin=cf/rev, cash=price, coc=roi, ds=0;
+      if(pay==='loan'){cash=price*down; ds=pmtYear(price-cash,rate,yrs); coc=(cf-ds)/cash;}
+      out.push({i:i,x:x,roi:roi,payback:payback,margin:margin,coc:coc,cash:cash,ds:ds,dist:dist,dscr:ds?cf/ds:null});
+    });
+    if(!out.length){document.getElementById('pResults').innerHTML='<div class="nores">No listings fit yet. Try a bigger budget, a wider distance, or more business types.</div>';return}
+    // Normalize each metric 0..1 across the matches, then weight by the buyer's priority.
+    function norm(k,invert){var v=out.map(function(o){return o[k]}),lo=Math.min.apply(0,v),hi=Math.max.apply(0,v);
+      out.forEach(function(o){var n=hi===lo?1:(o[k]-lo)/(hi-lo);o['n_'+k]=invert?1-n:n})}
+    norm(pay==='loan'?'coc':'roi'); norm('payback',true); norm('margin');
+    out.forEach(function(o){o.n_dist=o.dist===null?0.5:Math.max(0,1-o.dist/Math.max(rad,1))});
+    var W={roi:[.55,.15,.15,.15],payback:[.2,.5,.15,.15],safe:[.2,.15,.5,.15]}[pri];
+    out.forEach(function(o){
+      var r=pay==='loan'?o.n_coc:o.n_roi;
+      o.score=Math.round(50+50*(W[0]*r+W[1]*o.n_payback+W[2]*o.n_margin+W[3]*o.n_dist));
+      if(o.x.v)o.score=Math.min(99,o.score+3); // small boost for verified financials
+    });
+    out.sort(function(a,b){return b.score-a.score});
+    render(out,pay,maxPrice);
+  }
+  function why(o,pay,pri){
+    var s=[];
+    if(pay==='loan') s.push('After loan payments of about $'+Math.round(o.ds/1000)+'K a year, you\'d keep $'+Math.round((o.x.cf*1000-o.ds)/1000)+'K, a '+pct(o.coc)+' yearly return on your $'+Math.round(o.cash/1000)+'K down.');
+    else s.push('Earns '+pct(o.roi)+' of its price back each year in cash flow.');
+    s.push('Pays for itself in about '+o.payback.toFixed(1)+' years.');
+    if(o.margin>=0.35) s.push('Strong '+pct(o.margin)+' profit margin.'); else if(o.margin<0.25) s.push('Thinner '+pct(o.margin)+' margin, so watch costs.');
+    if(o.dscr!==null&&o.dscr<1.25) s.push('Cash flow only covers the loan '+o.dscr.toFixed(2)+'x, which lenders may see as tight.');
+    if(o.dist!==null) s.push(Math.round(o.dist)+' miles away.');
+    if(o.x.v) s.push('Financials verified.');
+    return s.join(' ');
+  }
+  function card(o,rank,pay){
+    return '<div class="pick" data-i="'+o.i+'"><div class="th" style="background:'+photo(o.x,300,300)+';background-size:cover;background-position:center"><span class="rank">'+rank+'</span></div>'+
+      '<div><span class="score">'+o.score+'/100</span><h3>'+o.x.n+(o.x.v?'<span class="ver">✓ Verified</span>':'')+'</h3>'+
+      '<div class="loc">'+o.x.loc+' · Asking '+money(o.x.ask)+'</div>'+
+      '<div class="met"><span>'+(pay==='loan'?'Cash-on-cash ':'Return ')+'<b>'+pct(pay==='loan'?o.coc:o.roi)+'</b></span>'+
+      '<span>Payback <b>'+o.payback.toFixed(1)+' yrs</b></span><span>Margin <b>'+pct(o.margin)+'</b></span>'+
+      (pay==='loan'?'<span>Cash needed <b>$'+Math.round(o.cash/1000)+'K</b></span>':'')+'</div>'+
+      '<div class="why">'+why(o,pay)+'</div></div></div>';
+  }
+  function render(out,pay,maxPrice){
+    var html='', free=out.slice(0,PREVIEW_FREE), rest=out.slice(PREVIEW_FREE);
+    free.forEach(function(o,k){html+=card(o,k+1,pay)});
+    if(rest.length){
+      html+='<div class="lockwrap"><div class="blurred">';
+      rest.forEach(function(o,k){html+=card(o,k+1+PREVIEW_FREE,pay)});
+      html+='</div><div class="unlock"><b>'+rest.length+' more pick'+(rest.length>1?'s':'')+' ranked for you</b>'+
+        '<a href="'+BUYER_LINK+'">Unlock with Buyer Premium · $15/mo</a><small>Cancel anytime</small></div></div>';
+    }
+    html+='<div class="assume">How we rank: return = yearly cash flow ÷ asking price'+(pay==='loan'?'; cash-on-cash = (cash flow − yearly loan payments) ÷ down payment':'')+
+      '; payback = price ÷ cash flow; margin = cash flow ÷ revenue. Searching up to $'+Math.round(maxPrice/1000)+'K purchase price. '+
+      (pay==='loan'?'Loan figures are estimates from the rate and term you entered; get a real quote from a lender. ':'')+
+      'Based on seller-reported numbers. Seller cash flow usually includes the owner\'s pay, so subtract what you\'d pay yourself or a manager. Not financial advice; verify everything before you buy.</div>';
+    var r=document.getElementById('pResults'); r.innerHTML=html;
+    r.querySelectorAll('.pick').forEach(function(el){
+      if(el.closest('.blurred'))return;
+      el.addEventListener('click',function(){closePicks();openDetail(+el.dataset.i)});
+    });
+    r.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function openPicksPanel(){closeDetail(); document.body.classList.add('picks','locked')}
+  function closePicks(){document.body.classList.remove('picks'); if(!document.body.classList.contains('frosted')&&!document.body.classList.contains('detail'))document.body.classList.remove('locked')}
+  document.getElementById('openPicks').addEventListener('click',openPicksPanel);
+  document.getElementById('closePicks').addEventListener('click',closePicks);
+  document.getElementById('pshade').addEventListener('click',closePicks);
+  document.getElementById('pGo').addEventListener('click',runPicks);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.body.classList.contains('picks'))closePicks(); });
+
+
+  // ---------- Logged-in members ----------
+  var member=null;
+  function applyMember(m){
+    member=m; if(!m) return;
+    if(m.buyerPremium) PREVIEW_FREE=Infinity;
+    if(m.buyerPremium||m.seller){ dismissed=true; closePlans(); }
+    if(m.buyerPremium && document.getElementById('pResults').innerHTML) runPicks();
+  }
+  if(window.NO) NO.membership().then(applyMember);
+  if(location.hash==='#picks'){ dismissed=true; openPicksPanel(); }
+
+  var tabs=document.querySelectorAll('.tabs button'), panes=document.querySelectorAll('.pane');
+  function selectTab(name){
+    tabs.forEach(function(b){b.classList.toggle('on',b.dataset.tab===name)});
+    panes.forEach(function(p){p.hidden=p.dataset.pane!==name});
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){selectTab(t.dataset.tab)})});
+})();
+</script>
+</body>
+</html>

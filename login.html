@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in · NextOwner</title>
+<link rel="stylesheet" href="/account.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<nav><a class="logo" href="/">NextOwner</a><a class="nl" href="/pricing">Plans</a></nav>
+<main>
+  <div class="panel">
+    <h1>Log in or sign up</h1>
+    <p class="sub">Enter your email and we'll send you a sign-in link. No password needed. Use the same email you used at checkout so we can find your plan.</p>
+    <form id="f">
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+      <button class="btn" id="go" type="submit">Email me a sign-in link</button>
+    </form>
+    <div class="msg" id="msg" role="status"></div>
+  </div>
+  <p class="foot">New here? Logging in creates your account. <a href="/pricing">See plans</a></p>
+</main>
+<script src="/auth.js"></script>
+<script>
+(function(){
+  var f=document.getElementById('f'), go=document.getElementById('go'), msg=document.getElementById('msg');
+  NO.session().then(function(s){ if(s) location.replace('/account'); });
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var email=document.getElementById('email').value.trim();
+    go.disabled=true; msg.className='msg'; msg.textContent='Sending…';
+    NO.sendLink(email).then(function(){
+      msg.className='msg ok';
+      msg.textContent='Check your inbox for a sign-in link from NextOwner. It can take a minute; check spam too.';
+    }).catch(function(err){
+      msg.className='msg err';
+      msg.textContent=(err && err.message) || 'Something went wrong. Try again.';
+      go.disabled=false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
