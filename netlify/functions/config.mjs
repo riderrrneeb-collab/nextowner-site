@@ -6,7 +6,8 @@ export default async () => {
   const url = process.env.SUPABASE_URL;
   const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
   if (!url || !anonKey) return json({ error: "Login is not set up yet." }, 503);
-  return json({ supabaseUrl: url, supabaseAnonKey: anonKey });
+  // Set GOOGLE_LOGIN=on in Netlify once Google is enabled in Supabase.
+  return json({ supabaseUrl: url, supabaseAnonKey: anonKey, googleLogin: process.env.GOOGLE_LOGIN === "on" });
 };
 
 export const config = { path: "/api/config" };

@@ -28,7 +28,7 @@
   /* ---------- App preview ---------- */
   .app{position:relative;z-index:1;transition:filter .9s ease, transform .9s ease}
   body.frosted .app{filter:blur(9px) saturate(120%)}
-  .top{position:sticky;top:0;z-index:5;padding:14px 16px;background:var(--glass);border-bottom:1px solid var(--edge);
+  .top{scroll-margin-top:0;position:sticky;top:0;z-index:5;padding:14px 16px;background:var(--glass);border-bottom:1px solid var(--edge);
     backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
   .topin{max-width:1200px;margin:0 auto;display:flex;gap:14px;align-items:center}
   .logo{font-weight:700;font-size:20px;letter-spacing:-.02em;white-space:nowrap}
@@ -191,13 +191,92 @@
   .unlock small{color:var(--muted)}
   .nores{color:var(--muted);text-align:center;padding:20px}
   .assume{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+
+  /* ---------- Intro (hero) ---------- */
+  .hero{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 16px 40px}
+  .hnav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+  .hnav .right{display:flex;gap:14px;align-items:center}
+  .hmain{min-height:calc(88vh - 80px);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px 0}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin-bottom:20px}
+  .hero h1{font-size:clamp(38px,7vw,76px);line-height:1.02;letter-spacing:-.045em;margin:0 0 18px;max-width:900px}
+  .hero h1 em{font-style:normal;background:linear-gradient(135deg,#0a84ff,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .lede{font-size:clamp(17px,2.2vw,20px);color:var(--muted);max-width:640px;margin:0 auto 28px;line-height:1.5}
+  .ctas{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .cta1,.cta2,.cta3{padding:14px 22px;border-radius:999px;font:inherit;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none;border:0}
+  .cta1{background:var(--ink);color:var(--bg)}
+  .cta2{background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff}
+  .cta3{background:var(--glass);color:var(--ink);border:1px solid var(--edge);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+  .insights{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+  @media (max-width:860px){.insights{grid-template-columns:1fr}}
+  .ins{padding:22px;border-radius:24px;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+  .ins .ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;
+    background:linear-gradient(135deg,rgba(10,132,255,.15),rgba(124,92,255,.15))}
+  .ins h3{margin:0 0 6px;font-size:18px;letter-spacing:-.01em}
+  .ins p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+  .how{margin:44px 0 0;text-align:center}
+  .how h2{font-size:clamp(24px,3.5vw,34px);letter-spacing:-.03em;margin:0 0 18px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left}
+  @media (max-width:860px){.steps{grid-template-columns:1fr}}
+  .step{display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:20px;background:var(--card);border:1px solid var(--line)}
+  .step b{display:block;margin-bottom:2px}
+  .step span{color:var(--muted);font-size:14px}
+  .num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .sellnote{margin:18px 0 0;color:var(--muted);font-size:15px}
+  .sellnote button{background:none;border:0;padding:0;font:inherit;color:var(--accent);font-weight:600;cursor:pointer}
+  .scrollcue{display:inline-flex;flex-direction:column;align-items:center;gap:4px;margin-top:34px;color:var(--muted);font-size:13px;text-decoration:none}
+  .scrollcue i{width:22px;height:34px;border-radius:12px;border:2px solid var(--muted);position:relative}
+  .scrollcue i::after{content:"";position:absolute;left:50%;top:6px;width:4px;height:7px;margin-left:-2px;border-radius:2px;background:var(--muted);animation:cue 1.6s ease-in-out infinite}
+  @keyframes cue{0%{opacity:0;transform:translateY(0)}40%{opacity:1}100%{opacity:0;transform:translateY(10px)}}
+  @media (prefers-reduced-motion: reduce){.scrollcue i::after{animation:none}}
 </style>
 </head>
 <body>
 <div class="blob b1"></div><div class="blob b2"></div>
 
 <div class="app">
-  <div class="top">
+  <header class="hero">
+    <div class="hnav">
+      <div class="logo">NextOwner</div>
+      <div class="right">
+        <a class="login" data-auth-link href="/login">Log in</a>
+        <button type="button" class="sell sellbtn" data-open-plans>List a business</button>
+      </div>
+    </div>
+    <div class="hmain">
+      <span class="eyebrow">Small businesses for sale, near you</span>
+      <h1>Skip the startup. <em>Own a business that already works.</em></h1>
+      <p class="lede">NextOwner is a marketplace for buying and selling small businesses: food trucks, studios, gyms, service routes and more. Browse by location, see the revenue and cash flow, and find the deals that fit your budget.</p>
+      <div class="ctas">
+        <a class="cta1" href="#browse">Browse businesses</a>
+        <button type="button" class="cta2" data-open-picks>✦ Find my best picks</button>
+        <button type="button" class="cta3" data-open-plans>List your business</button>
+      </div>
+      <a class="scrollcue" href="#browse" aria-label="Scroll to listings"><i></i>Scroll to browse</a>
+    </div>
+
+    <section class="insights" aria-label="Why buy an existing business">
+      <div class="ins"><div class="ic">☀︎</div><h3>Customers on day one</h3>
+        <p>An existing business comes with customers, staff, suppliers and a track record. You're taking over something that works instead of starting from zero.</p></div>
+      <div class="ins"><div class="ic">◎</div><h3>Numbers you can check</h3>
+        <p>Revenue and cash flow history let you judge a deal before you buy. Many buyers finance part of the price instead of paying it all up front.</p></div>
+      <div class="ins"><div class="ic">◆</div><h3>Small deals, real upside</h3>
+        <p>Brokers often pass on smaller businesses because the commission is too small. NextOwner lists businesses of every size, from food trucks up.</p></div>
+    </section>
+
+    <section class="how">
+      <h2>How NextOwner works</h2>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div><b>Browse near you</b><span>Filter by location, type and price. Every listing shows asking price, revenue and cash flow.</span></div></div>
+        <div class="step"><span class="num">2</span><div><b>Find your best fit</b><span>✦ Best Picks ranks listings by return on investment for your budget and location.</span></div></div>
+        <div class="step"><span class="num">3</span><div><b>Talk to the owner</b><span>Contact sellers directly. Verified listings have checked owners and financials.</span></div></div>
+      </div>
+      <p class="sellnote">Selling? List for one flat monthly price with no commission. <button type="button" data-open-plans>See seller plans →</button></p>
+    </section>
+  </header>
+
+  <div class="top" id="browse">
     <div class="topin">
       <div class="logo">NextOwner</div>
       <label class="search">⌕ <input id="q" type="search" placeholder="Search businesses, cities or states" aria-label="Search listings"></label>
@@ -444,7 +523,12 @@
   var shown=false, dismissed=false;
   function openPlans(){shown=true;document.body.classList.add('frosted','locked');}
   function closePlans(){dismissed=true;document.body.classList.remove('frosted'); if(!document.body.classList.contains('detail'))document.body.classList.remove('locked')}
-  setTimeout(function(){ if(!dismissed && !shown && !document.body.classList.contains('detail') && !document.body.classList.contains('picks')) openPlans(); },2500);
+  var promptTimer=null;
+  function armPrompt(){ if(promptTimer) return; promptTimer=setTimeout(function(){ if(!dismissed && !shown && !document.body.classList.contains('detail') && !document.body.classList.contains('picks')) openPlans(); },2500); }
+  var listingsEl=document.querySelector('.main');
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es,obs){ es.forEach(function(e){ if(e.isIntersecting){ armPrompt(); obs.disconnect(); } }); },{threshold:0.15}).observe(listingsEl);
+  } else { armPrompt(); }
   document.getElementById('closePlans').addEventListener('click',closePlans);
   document.getElementById('openPlans').addEventListener('click',function(){openPlans(); selectTab('sell');});
   document.querySelector('.veil').addEventListener('click',closePlans);
@@ -562,6 +646,8 @@
   function openPicksPanel(){closeDetail(); document.body.classList.add('picks','locked')}
   function closePicks(){document.body.classList.remove('picks'); if(!document.body.classList.contains('frosted')&&!document.body.classList.contains('detail'))document.body.classList.remove('locked')}
   document.getElementById('openPicks').addEventListener('click',openPicksPanel);
+  document.querySelectorAll('[data-open-picks]').forEach(function(b){ b.addEventListener('click',openPicksPanel); });
+  document.querySelectorAll('[data-open-plans]').forEach(function(b){ b.addEventListener('click',function(){ openPlans(); selectTab('sell'); }); });
   document.getElementById('closePicks').addEventListener('click',closePicks);
   document.getElementById('pshade').addEventListener('click',closePicks);
   document.getElementById('pGo').addEventListener('click',runPicks);

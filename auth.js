@@ -2,7 +2,7 @@
 // Loads Supabase sign-in, tracks the session, and fetches the member's plans.
 (function () {
   var SDK = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  var clientPromise = null, memberPromise = null;
+  var clientPromise = null, memberPromise = null, cfgPromise = null;
 
   function loadSdk() {
     return new Promise(function (resolve, reject) {
@@ -13,10 +13,21 @@
     });
   }
 
+  function config() {
+    if (!cfgPromise) cfgPromise = fetch("/api/config")
+      .then(function (r) { if (!r.ok) throw new Error("Login is not set up yet."); return r.json(); });
+    return cfgPromise;
+  }
+
+  function signInWithGoogle() {
+    return client().then(function (c) {
+      return c.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + "/account" } });
+    }).then(function (r) { if (r.error) throw r.error; });
+  }
+
   function client() {
     if (!clientPromise) {
-      clientPromise = fetch("/api/config")
-        .then(function (r) { if (!r.ok) throw new Error("Login is not set up yet."); return r.json(); })
+      clientPromise = config()
         .then(function (cfg) {
           return loadSdk().then(function () {
             return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
@@ -108,7 +119,7 @@
   }
 
   window.NO = { client: client, session: session, membership: membership, sendLink: sendLink,
-    verifyCode: verifyCode, onSignIn: onSignIn,
+    verifyCode: verifyCode, onSignIn: onSignIn, config: config, signInWithGoogle: signInWithGoogle,
     signOut: signOut, openPortal: openPortal, prefillCheckout: prefillCheckout, updateNav: updateNav };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", updateNav); else updateNav();
   // Keep "Log in" / "Account" in sync if the person signs in from another tab.
