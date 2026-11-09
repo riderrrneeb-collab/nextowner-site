@@ -14,13 +14,20 @@ function env(name) {
   return v;
 }
 
+// Supabase public key: the new "publishable" key, or the legacy "anon" key.
+export function supabaseKey() {
+  const v = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+  if (!v) throw new Error("Missing environment variable SUPABASE_PUBLISHABLE_KEY");
+  return v;
+}
+
 // Confirms the Supabase login token and returns the signed-in user's verified email.
 export async function verifiedEmail(req) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token) return null;
   const res = await fetch(`${env("SUPABASE_URL")}/auth/v1/user`, {
-    headers: { apikey: env("SUPABASE_ANON_KEY"), authorization: `Bearer ${token}` },
+    headers: { apikey: supabaseKey(), authorization: `Bearer ${token}` },
   });
   if (!res.ok) return null;
   const user = await res.json();

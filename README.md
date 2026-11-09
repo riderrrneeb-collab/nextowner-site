@@ -16,11 +16,11 @@ Static pages plus three small Netlify Functions that power member logins.
 
 1. **GitHub:** create a repository (for example `nextowner-site`) and upload every file and folder here, keeping the `netlify` folder structure.
 2. **Netlify:** link your existing mynextowner.com site to that repository. Leave the build command empty; the publish directory is `.` (set in `netlify.toml`). Every push to GitHub now deploys automatically.
-3. **Supabase** (free): create a project. Under Authentication → URL Configuration, set the Site URL to `https://mynextowner.com` and add `https://mynextowner.com/account` as a redirect URL. From the project's API settings, copy the **Project URL** and the **anon / public** key.
-4. **Stripe:** in Developers → API keys, create a **restricted key** with read access to Customers and Subscriptions, and write access to the Customer portal. A restricted key limits the damage if it ever leaks.
+3. **Supabase** (free): create a project. Under Authentication → URL Configuration, set the Site URL to `https://mynextowner.com` and add `https://mynextowner.com/account` as a redirect URL. From the project's API settings, copy the **Project URL** and the **publishable** key (starts with `sb_publishable_`). A legacy anon key also works.
+4. **Stripe:** in Developers → API keys, create a **restricted key** with **Customers: Read**, **Subscriptions: Read** and **Customer portal: Write**, everything else None. A restricted key limits the damage if it ever leaks.
 5. **Netlify environment variables** (Site configuration → Environment variables):
    - `SUPABASE_URL` = the Project URL
-   - `SUPABASE_ANON_KEY` = the anon / public key
+   - `SUPABASE_PUBLISHABLE_KEY` = the publishable key (or `SUPABASE_ANON_KEY` = a legacy anon key)
    - `STRIPE_SECRET_KEY` = the restricted key from step 4
 
    Then trigger a redeploy.
