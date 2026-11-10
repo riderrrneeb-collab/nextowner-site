@@ -1,0 +1,22 @@
+// Daily check that every live listing still has a paid seller plan.
+// Takes listings offline when a plan is canceled and restores them when it's renewed.
+// Runs at 10:00 UTC (3am Mountain in winter, 4am in summer).
+import { allListings, syncOwner } from "../lib/listings.mjs";
+
+export default async () => {
+  const listings = await allListings();
+  const owners = [...new Set(listings.map((l) => l.owner))];
+  let changed = 0;
+  for (const email of owners) {
+    try {
+      const before = listings.filter((l) => l.owner === email).map((l) => `${l.active}:${l.tier}`).join();
+      const { mine } = await syncOwner(email, null, listings);
+      if (mine.map((l) => `${l.active}:${l.tier}`).join() !== before) changed++;
+    } catch (err) {
+      console.error(`Sync failed for an owner: ${err.message}`);
+    }
+  }
+  console.log(`Listing sync: ${owners.length} owners checked, ${changed} updated.`);
+};
+
+export const config = { schedule: "0 10 * * *" };

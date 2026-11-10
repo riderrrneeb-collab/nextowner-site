@@ -38,7 +38,10 @@
   var f=document.getElementById('f'), cf=document.getElementById('cf'), go=document.getElementById('go'),
       verify=document.getElementById('verify'), msg=document.getElementById('msg'), sub=document.getElementById('sub'),
       code=document.getElementById('code'), email='';
-  function done(){ location.replace('/account'); }
+  function done(){
+    var n=new URLSearchParams(location.search).get('next')||'';
+    location.replace(/^\/(?!\/)/.test(n)?n:'/account');
+  }
   NO.session().then(function(s){ if(s) done(); });
   NO.config().then(function(c){ if(c && c.googleLogin) document.getElementById('g').hidden=false; }).catch(function(){});
   document.getElementById('gbtn').addEventListener('click',function(){

@@ -4,11 +4,13 @@ Static pages plus three small Netlify Functions that power member logins.
 
 | File | What it is |
 |---|---|
-| `index.html` | Marketplace preview, Best Picks finder, subscription prompt |
-| `pricing.html` | Plans with Stripe checkout links |
-| `login.html` | Email sign-in link (no passwords), via Supabase |
-| `account.html` | Member's plans from Stripe + "Manage billing and plans" |
-| `auth.js`, `account.css` | Shared login helper and styles |
+| `public/index.html` | Marketplace preview, Best Picks finder, subscription prompt |
+| `public/pricing.html` | Plans with Stripe checkout links |
+| `public/login.html` | Email sign-in link (no passwords), via Supabase |
+| `public/account.html` | Member's plans from Stripe + "Manage billing and plans" |
+| `public/auth.js`, `public/account.css` | Shared login helper and styles |
+| `public/sell.html` | Create and edit a listing (sellers with a plan; admins any time) |
+| `public/admin.html` | Admin: verify, hide, edit or delete any listing |
 | `netlify/functions/` | `config` (public Supabase settings), `membership` (looks up plans in Stripe), `portal` (opens Stripe billing) |
 | `netlify.toml` | Tells Netlify where the site and functions live |
 
@@ -39,3 +41,11 @@ Static pages plus three small Netlify Functions that power member logins.
 
 - Supabase's built-in email sender has a low hourly limit. Before real traffic, connect a custom email sender (SMTP) in Supabase so sign-in links always arrive.
 - Never put the Stripe key in any HTML or JS file. It belongs only in Netlify's environment variables.
+
+## Listings
+
+- Listings and photos are stored in Netlify Blobs (stores `listings` and `listing-photos`); nothing to set up.
+- Each active seller plan allows one live listing. If a plan is canceled, the daily `sync-listings` job takes the listing offline; it comes back when the plan is renewed.
+- Seller contact details are only returned to logged-in visitors (`/api/contact/:id`).
+- Admins (mynextownerofficial@gmail.com, plus any emails in the `ADMIN_EMAILS` variable, comma-separated) can create listings without a plan and verify, hide or delete any listing at /admin.
+- Example listings fill the homepage until there are 6 real ones, and are labeled "Example".

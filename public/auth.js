@@ -94,6 +94,24 @@
       .then(function (d) { location.href = d.url; });
   }
 
+  // Calls a NextOwner API with the visitor's login attached.
+  // Resolves to the JSON body; rejects with an Error carrying .status and .data.
+  function api(path, opts) {
+    opts = opts || {};
+    return session().then(function (s) {
+      var headers = Object.assign({}, opts.headers || {});
+      if (s) headers.authorization = "Bearer " + s.access_token;
+      var body = opts.body;
+      if (body && !(body instanceof Blob) && typeof body !== "string") { body = JSON.stringify(body); headers["content-type"] = "application/json"; }
+      return fetch(path, { method: opts.method || "GET", headers: headers, body: body });
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) { var e = new Error(d.error || "Something went wrong."); e.status = r.status; e.data = d; throw e; }
+        return d;
+      });
+    });
+  }
+
   // Pre-fills the signed-in email on Stripe checkout links so the purchase
   // lands on the same account.
   function prefillCheckout(email) {
@@ -119,7 +137,7 @@
   }
 
   window.NO = { client: client, session: session, membership: membership, sendLink: sendLink,
-    verifyCode: verifyCode, onSignIn: onSignIn, config: config, signInWithGoogle: signInWithGoogle,
+    verifyCode: verifyCode, onSignIn: onSignIn, config: config, signInWithGoogle: signInWithGoogle, api: api,
     signOut: signOut, openPortal: openPortal, prefillCheckout: prefillCheckout, updateNav: updateNav };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", updateNav); else updateNav();
   // Keep "Log in" / "Account" in sync if the person signs in from another tab.

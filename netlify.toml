@@ -1,6 +1,6 @@
-# NextOwner site: static pages plus a few server functions.
+# NextOwner site: static pages in /public plus server functions.
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
 
 [[redirects]]
@@ -16,4 +16,14 @@
 [[redirects]]
   from = "/account"
   to = "/account.html"
+  status = 200
+
+[[redirects]]
+  from = "/sell"
+  to = "/sell.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
   status = 200

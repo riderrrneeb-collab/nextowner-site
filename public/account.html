@@ -16,6 +16,10 @@
     <div id="content"></div>
     <div class="msg" id="msg" role="status"></div>
   </div>
+  <div class="panel" id="lpanel" style="margin-top:16px" hidden>
+    <h1 style="font-size:24px">Your listings</h1>
+    <div id="lcontent"></div>
+  </div>
   <p class="foot"><button type="button" id="out">Log out</button></p>
 </main>
 <script src="/auth.js"></script>
@@ -55,8 +59,35 @@
     });
   }
 
+  var STATUS={live:['ok','Live'],offline:['warn','Offline: needs a seller plan'],hidden:['warn','Hidden by NextOwner']};
+  function renderListings(d){
+    var p=document.getElementById('lpanel'), c=document.getElementById('lcontent');
+    if(!d.listings.length && !d.canCreate && !d.admin) return;
+    p.hidden=false;
+    var h='';
+    if(d.listings.length){
+      h+='<div class="plans">';
+      d.listings.forEach(function(l){
+        var st=l.status==='hidden'?STATUS.hidden:(l.active?STATUS.live:STATUS.offline);
+        h+='<div class="plan"><div><b>'+esc(l.name)+'</b><small>'+esc(l.city+', '+l.state)+' · Asking $'+Number(l.ask).toLocaleString()+
+          (l.verified?' · ✓ Verified':'')+'</small>'+
+          '<small class="lact"><a href="/?listing='+l.id+'">View</a> · <a href="/sell?id='+l.id+'">Edit</a></small></div>'+
+          '<span class="pill '+st[0]+'">'+st[1]+'</span></div>';
+      });
+      h+='</div>';
+    } else {
+      h+='<div class="empty">You haven\'t listed a business yet.</div>';
+    }
+    h+='<div class="row">';
+    if(d.canCreate) h+='<a class="btn" href="/sell">'+(d.listings.length?'Add another listing':'Create your listing')+'</a>';
+    if(d.admin) h+='<a class="btn sec" href="/admin">Admin: review all listings</a>';
+    h+='</div>';
+    c.innerHTML=h;
+  }
+
   NO.session().then(function(s){
-    if(!s){ location.replace('/login'); return; }
+    if(!s){ location.replace('/login?next=/account'); return; }
+    NO.api('/api/my-listings').then(renderListings).catch(function(){});
     return NO.membership(true).then(function(m){
       if(!m){ who.textContent='Signed in as '+s.user.email; msg.className='msg err'; msg.textContent='Could not load your plans. Refresh to try again.'; return; }
       render(m);
