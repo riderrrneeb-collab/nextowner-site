@@ -6,11 +6,13 @@ import { createHash, randomUUID } from "node:crypto";
 import { customersFor, plansFor } from "./shared.mjs";
 
 export const CATEGORIES = ["Food & drink", "Fitness", "Services", "Retail", "Routes", "Other"];
-const RANK = { premium: 3, featured: 2, starter: 1 };
-const MAX_PHOTOS = 20;
+const RANK = { premium: 3, featured: 2, starter: 1, free: 0 };
+const MAX_PHOTOS = 25;
 // Photos shown publicly per plan. Drafts without a plan can hold the Starter amount.
-export const PHOTO_LIMIT = { starter: 5, featured: 12, premium: 20 };
-export const TIERS = ["starter", "featured", "premium"];
+export const PHOTO_LIMIT = { free: 5, starter: 10, featured: 15, premium: 25 };
+export const TIERS = ["free", "starter", "featured", "premium"];
+// Every account can publish one free listing; each seller plan adds one more at its tier.
+export const FREE_SLOTS = 1;
 export const tierRank = (t) => RANK[t] || 0;
 
 // NextOwner admins can verify, hide or remove any listing.
@@ -58,9 +60,11 @@ export function publicView(l) {
     lat: l.lat ?? null, lng: l.lng ?? null,
     ask: l.ask, revenue: l.revenue, cashFlow: l.cashFlow,
     yearEstablished: l.yearEstablished ?? null, employees: l.employees ?? null,
-    description: l.description, reason: l.reason || "", video: l.video || "",
-    photos: (l.photos || []).slice(0, PHOTO_LIMIT[l.tier] || PHOTO_LIMIT.starter).map((k) => `/api/photos/${k}`),
-    verified: !!l.verified, tier: l.tier || "starter", createdAt: l.createdAt,
+    description: l.description, reason: l.reason || "",
+    // Paid features only show when the listing's plan includes them.
+    video: (RANK[l.tier] || 0) >= RANK.starter ? l.video || "" : "",
+    photos: (l.photos || []).slice(0, PHOTO_LIMIT[l.tier] ?? PHOTO_LIMIT.free).map((k) => `/api/photos/${k}`),
+    verified: !!l.verified && (RANK[l.tier] || 0) >= RANK.starter, tier: l.tier || "free", createdAt: l.createdAt,
   };
 }
 
@@ -70,7 +74,7 @@ export function ownerView(l) {
     ...publicView(l),
     zip: l.zip || "", photoKeys: l.photos || [],
     allPhotos: (l.photos || []).map((k) => `/api/photos/${k}`),
-    wantTier: l.wantTier || "starter", social: !!l.social,
+    wantTier: l.wantTier || "free", social: !!l.social, featured: !!l.featured, top: !!l.top,
     contactName: l.contactName || "", contactEmail: l.contactEmail || "", contactPhone: l.contactPhone || "",
     status: l.status, active: !!l.active, owner: l.owner, updatedAt: l.updatedAt,
   };
@@ -112,8 +116,9 @@ export function cleanListing(input, ownerEmail, allowForeignPhotos = []) {
     contactEmail: text(input.contactEmail, 120).toLowerCase(),
     contactPhone: text(input.contactPhone, 30),
     photos: [],
-    wantTier: TIERS.includes(input.wantTier) ? input.wantTier : "starter",
     social: input.social === true,
+    featured: input.featured === true,
+    top: input.top === true,
   };
   if (v.name.length < 3) errors.push("Business name");
   if (!v.category) errors.push("Category");
@@ -127,12 +132,15 @@ export function cleanListing(input, ownerEmail, allowForeignPhotos = []) {
   if (!EMAIL.test(v.contactEmail)) errors.push("Contact email");
   if (v.video && !/^https:\/\/\S+$/i.test(v.video)) errors.push("Video link (must start with https://)");
 
+  v.wantTier = v.top || v.social ? "premium" : v.featured ? "featured" : (v.video ? "starter" : "free");
   const mine = ownerKey(ownerEmail);
   const photos = Array.isArray(input.photos) ? input.photos : [];
   for (const k of photos.slice(0, MAX_PHOTOS)) {
     const key = String(k);
     if (PHOTO_KEY.test(key) && (key.startsWith(mine + "/") || allowForeignPhotos.includes(key))) v.photos.push(key);
   }
+  const photoTier = v.photos.length > PHOTO_LIMIT.featured ? "premium" : v.photos.length > PHOTO_LIMIT.starter ? "featured" : v.photos.length > PHOTO_LIMIT.free ? "starter" : "free";
+  if (RANK[photoTier] > RANK[v.wantTier]) v.wantTier = photoTier;
   return { value: v, errors };
 }
 
@@ -152,9 +160,9 @@ export async function geocodeZip(zip) {
   }
 }
 
-// Matches an owner's listings to their active seller plans: one live listing
-// per plan, best plan to oldest listing. Listings without a plan go offline
-// until the owner adds one.
+// Matches an owner's listings to their plans: paid plans first (best plan to
+// oldest listing), then one free slot. Listings beyond that go offline until
+// the owner adds a plan.
 export async function syncOwner(email, plans, listings) {
   if (!plans) plans = await plansFor(await customersFor(email));
   const seller = plans.filter((p) => p.side === "seller").sort((a, b) => RANK[b.tier] - RANK[a.tier]);
@@ -166,7 +174,7 @@ export async function syncOwner(email, plans, listings) {
   if (isAdmin(email)) {
     // NextOwner's own listings (for example, ones set up for brokers) don't need a plan.
     for (const l of mine) {
-      const tier = TIERS.includes(l.wantTier) ? l.wantTier : "starter";
+      const tier = TIERS.includes(l.wantTier) ? l.wantTier : "free";
       if (l.active !== true || l.tier !== tier) { l.active = true; l.tier = tier; await saveListing(l); }
     }
     return { mine, slots: Infinity, plans, used, bestTier: "premium", admin: true };
@@ -174,15 +182,16 @@ export async function syncOwner(email, plans, listings) {
   for (let i = 0; i < mine.length; i++) {
     const l = mine[i];
     const plan = seller[i];
-    const active = !!plan;
-    const tier = plan ? plan.tier : l.tier || "starter";
+    const free = !plan && i < seller.length + FREE_SLOTS;
+    const active = !!plan || free;
+    const tier = plan ? plan.tier : "free";
     if (l.active !== active || l.tier !== tier) {
       l.active = active;
       l.tier = tier;
       await saveListing(l);
     }
   }
-  return { mine, slots: seller.length, plans, used, bestTier, admin: false };
+  return { mine, slots: seller.length + FREE_SLOTS, paidSlots: seller.length, plans, used, bestTier, admin: false };
 }
 
 // ---------- Sellers (ID verification) ----------

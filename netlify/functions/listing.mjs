@@ -40,7 +40,7 @@ export default async (req, context) => {
         const fresh = owner.mine.find((l) => l.id === updated.id);
         if (owner.admin || (fresh && fresh.active)) { fresh.status = "live"; fresh.updatedAt = Date.now(); await saveListing(fresh); updated.status = "live"; }
         else needPlan = true;
-        return json({ ok: true, id: updated.id, status: updated.status, needPlan, hasPlan: owner.slots > 0 });
+        return json({ ok: true, id: updated.id, status: updated.status, needPlan, hasPlan: (owner.paidSlots || 0) > 0 });
       }
       return json({ ok: true, id: updated.id, status: updated.status });
     }

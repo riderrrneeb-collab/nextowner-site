@@ -59,7 +59,7 @@
     });
   }
 
-  var STATUS={live:['ok','Live'],offline:['warn','Offline: needs a seller plan'],hidden:['warn','Hidden by NextOwner'],draft:['warn','Draft: not published']};
+  var STATUS={live:['ok','Live'],offline:['warn','Offline: add a plan to relist'],hidden:['warn','Hidden by NextOwner'],draft:['warn','Draft: not published']};
   function renderListings(d){
     var p=document.getElementById('lpanel'), c=document.getElementById('lcontent');
     var seller=!!d.bestTier||d.admin;

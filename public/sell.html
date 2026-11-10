@@ -45,6 +45,9 @@
   .opt input{margin-top:3px;width:18px;height:18px;flex:0 0 auto}
   .opt b{display:block}
   .opt span{color:var(--muted);font-size:13px}
+  .inc{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--good);margin-top:2px}
+  .inc:empty{display:none}
+  .pwskip{display:block;width:100%;margin-top:10px;padding:10px;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
   .idbox{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
   .idbox .btn{width:auto;margin:0;padding:11px 18px}
   /* Paywall */
@@ -113,18 +116,18 @@
       <div class="f">
         <div class="thumbs" id="thumbs"></div>
         <input id="files" type="file" accept="image/*" multiple hidden>
-        <div class="hint"><span id="phcount"></span> The first photo is the cover. Photos are resized automatically.</div>
+        <div class="hint">The first photo is the cover. Photos are resized automatically.</div>
       </div>
       <div class="f"><label for="video">Video tour link</label><input id="video" maxlength="300" placeholder="https://youtube.com/…">
         <div class="hint">Record a walkthrough on your phone and paste a YouTube, Vimeo or other https link.</div></div>
 
-      <h2>Listing package</h2>
-      <div class="pkgs" id="pkgs"></div>
-
-      <h2>Extras</h2>
-      <label class="opt" id="socialOpt"><input type="checkbox" id="social">
-        <div><b>NextOwner social promotion <span class="lock" id="socialLock">Premium</span></b>
-        <span>Include this listing in NextOwner's social media promotion.</span></div></label>
+      <h2>Stand out</h2>
+      <label class="opt"><input type="checkbox" id="featured">
+        <div><b>Featured listing</b><span>Show above standard listings with a Featured tag, in search and on the map.</span><em class="inc" data-inc="featured"></em></div></label>
+      <label class="opt"><input type="checkbox" id="top">
+        <div><b>Top placement</b><span>Appear first in search results and on the map.</span><em class="inc" data-inc="premium"></em></div></label>
+      <label class="opt"><input type="checkbox" id="social">
+        <div><b>Social media promotion</b><span>Include this listing in NextOwner's social media promotion.</span><em class="inc" data-inc="premium"></em></div></label>
       <div class="idbox" id="idbox"></div>
 
       <h2>How buyers reach you</h2>
@@ -152,105 +155,80 @@
 (function(){
   var STATES="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
   var PLANS={
-    starter:{name:"Starter",price:"$29/mo",link:"https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00",
-      perks:["1 listing","Up to 5 photos","Video tour link","✓ Verified badge (ID check by Stripe)"]},
-    featured:{name:"Featured",price:"$59/mo",link:"https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02",
-      perks:["Everything in Starter","Up to 12 photos","Featured tag","Shown above Starter listings and on the map"]},
-    premium:{name:"Premium",price:"$119/mo",link:"https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04",
-      perks:["Everything in Featured","Up to 20 photos","Top placement","NextOwner social promotion"]}
+    starter:{name:"Starter",price:"$29/mo",link:"https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00",perks:"Video tour · ✓ Verified badge · up to 10 photos"},
+    featured:{name:"Featured",price:"$59/mo",link:"https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02",perks:"Featured placement + tag · up to 15 photos · everything in Starter"},
+    premium:{name:"Premium",price:"$119/mo",link:"https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04",perks:"Top placement · social promotion · up to 25 photos · everything in Featured"}
   };
-  var ORDER=["starter","featured","premium"], RANK={starter:1,featured:2,premium:3};
-  var LIMIT={starter:5,featured:12,premium:20};
+  var ORDER=["starter","featured","premium"], RANK={free:0,starter:1,featured:2,premium:3};
+  var LIMIT={free:5,starter:10,featured:15,premium:25};
   var FIELDS=['name','category','yearEstablished','city','state','zip','ask','revenue','cashFlow','employees','reason','description','video','contactName','contactEmail','contactPhone'];
   var $=function(id){return document.getElementById(id)};
   var form=$('form'), msg=$('msg'), lead=$('lead'), banner=$('banner');
-  var photos=[], uploading=0, editing=null, me=null, email='', pkg='starter', AFTER='no_after_pay';
+  var photos=[], uploading=0, editing=null, me=null, email='', AFTER='no_after_pay';
   var params=new URLSearchParams(location.search), editId=params.get('id');
   $('state').innerHTML='<option value="">—</option>'+STATES.map(function(s){return '<option>'+s+'</option>'}).join('');
-  if(RANK[params.get('tier')]) pkg=params.get('tier');
 
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function say(t,kind){msg.className='msg'+(kind?' '+kind:'');msg.textContent=t||''}
   function fmt(n){return n==null||n===''?'':'$'+Number(n).toLocaleString()}
   function store(k,v){try{v===undefined?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
   function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
-  function has(tier){return !!(me&&(me.admin||(me.bestTier&&RANK[me.bestTier]>=RANK[tier])))}
-  function limit(){return me&&me.admin?20:LIMIT[me&&me.bestTier||'starter']}
-  function needTierForPhotos(n){return n<=5?'starter':(n<=12?'featured':'premium')}
+  function tier(){return me&&me.admin?'premium':(me&&me.bestTier)||'free'}
+  function has(t){return RANK[tier()]>=RANK[t]}
+  function limit(){return LIMIT[tier()]}
+  function tierForPhotos(n){return n<=LIMIT.free?'free':n<=LIMIT.starter?'starter':n<=LIMIT.featured?'featured':'premium'}
 
-  // ---------- Paywall ----------
-  function closePw(){$('pwRoot').innerHTML=''}
-  function checkoutUrl(tier){var u=new URL(PLANS[tier].link);u.searchParams.set('prefilled_email',email);return u.toString()}
-  // reason: 'publish' | 'photos' | 'package' | 'social' | 'verify'; need: minimum tier
-  function paywall(reason,need,title,text){
-    var hasAny=me&&me.bestTier, full=reason==='publish'&&hasAny&&!me.canPublish;
+  // ---------- Paywall: appears only when someone uses a paid feature ----------
+  var onCancel=null;
+  function closePw(cancelled){$('pwRoot').innerHTML=''; if(cancelled&&onCancel)onCancel(); onCancel=null;}
+  function checkoutUrl(t){var u=new URL(PLANS[t].link);u.searchParams.set('prefilled_email',email);return u.toString()}
+  function paywall(reason,need,title,text,cancel){
+    onCancel=cancel||null;
+    var paid=me&&me.bestTier&&!me.admin, upgrade=paid&&reason!=='publish';
     var h='<div class="pwshade" id="pwShade"></div><div class="pw" role="dialog" aria-modal="true"><button type="button" class="x" id="pwX" aria-label="Close">×</button>'+
       '<h3>'+esc(title)+'</h3><p>'+esc(text)+'</p><div class="pwplans">';
-    if(hasAny && !full){
-      // Already a seller: upgrade the existing plan in billing.
-      h+='<button type="button" class="pwplan rec" data-upgrade="1"><div><b>Upgrade to '+PLANS[need].name+'</b><small>Switch plans in billing. Your listing keeps everything you\'ve entered.</small></div><span class="p">'+PLANS[need].price+'</span></button>';
+    if(upgrade){
+      h+='<button type="button" class="pwplan rec" data-upgrade="1"><div><b>Upgrade to '+PLANS[need].name+'</b><small>'+PLANS[need].perks+'</small></div><span class="p">'+PLANS[need].price+'</span></button>';
     } else {
-      ORDER.forEach(function(t){
-        var ok=RANK[t]>=RANK[need];
-        h+='<button type="button" class="pwplan'+(t===(RANK[pkg]>=RANK[need]?pkg:need)?' rec':'')+'" data-tier="'+t+'"'+(ok?'':' disabled')+'>'+
-          '<div><b>'+PLANS[t].name+'</b><small>'+PLANS[t].perks.slice(1).join(' · ')+'</small></div><span class="p">'+PLANS[t].price+'</span></button>';
+      ORDER.forEach(function(t){ if(RANK[t]<RANK[need])return;
+        h+='<button type="button" class="pwplan'+(t===need?' rec':'')+'" data-tier="'+t+'"><div><b>'+PLANS[t].name+'</b><small>'+PLANS[t].perks+'</small></div><span class="p">'+PLANS[t].price+'</span></button>';
       });
     }
-    h+='</div><p style="margin:14px 0 0;font-size:13px">'+(full?'Each plan covers one live listing. ':'')+'Your listing is saved as a draft, so nothing you\'ve entered is lost. Cancel anytime.</p></div>';
+    h+='</div><button type="button" class="pwskip" id="pwSkip">'+(reason==='publish'?'Not now':'No thanks, keep my listing free')+'</button></div>';
     $('pwRoot').innerHTML=h;
-    $('pwX').onclick=closePw; $('pwShade').onclick=closePw;
+    $('pwX').onclick=function(){closePw(true)}; $('pwShade').onclick=function(){closePw(true)}; $('pwSkip').onclick=function(){closePw(true)};
     $('pwRoot').querySelectorAll('[data-tier]').forEach(function(b){b.onclick=function(){
-      var t=b.dataset.tier; pkg=t; renderPkgs();
-      b.disabled=true; b.querySelector('small').textContent='Saving your draft…';
+      b.disabled=true; b.querySelector('small').textContent='Saving your listing…';
       saveListing(false).then(function(id){
-        store(AFTER,JSON.stringify({id:id,publish:reason==='publish'}));
-        location.href=checkoutUrl(t);
-      }).catch(function(err){closePw();say(err.message,'err')});
+        store(AFTER,JSON.stringify({id:id,publish:reason==='publish',feature:reason}));
+        location.href=checkoutUrl(b.dataset.tier);
+      }).catch(function(err){closePw(true);say(err.message,'err')});
     }});
     var up=$('pwRoot').querySelector('[data-upgrade]');
     if(up) up.onclick=function(){
       up.disabled=true; up.querySelector('small').textContent='Saving and opening billing…';
-      saveListing(false).then(function(){return NO.openPortal()}).catch(function(err){closePw();say(err.message,'err')});
+      saveListing(false).then(function(){return NO.openPortal()}).catch(function(err){closePw(true);say(err.message,'err')});
     };
-  }
-
-  // ---------- Packages ----------
-  function renderPkgs(){
-    $('pkgs').innerHTML=ORDER.map(function(t){
-      var P=PLANS[t], yours=me&&!me.admin&&me.bestTier===t;
-      return '<button type="button" class="pkg'+(pkg===t?' on':'')+'" data-t="'+t+'">'+(yours?'<span class="yours">Your plan</span>':'')+
-        '<b>'+P.name+'</b><div class="pr">'+P.price+'</div><ul>'+P.perks.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></button>';
-    }).join('');
-    $('pkgs').querySelectorAll('.pkg').forEach(function(b){b.onclick=function(){
-      var t=b.dataset.t;
-      if(me&&me.bestTier&&!has(t)){ paywall('package',t,PLANS[t].name+' placement','Your current plan is '+PLANS[me.bestTier].name+'. Upgrade to get '+PLANS[t].name.toLowerCase()+' placement for this listing.'); return; }
-      pkg=t; renderPkgs();
-    }});
-    $('socialLock').hidden=has('premium');
   }
 
   // ---------- Photos ----------
   function renderThumbs(){
-    var t=$('thumbs'), lim=limit(), canAdd=photos.length+uploading<20;
+    var t=$('thumbs');
     t.innerHTML=photos.map(function(p,i){
       return '<div class="thumb" style="background-image:url(\''+p.url+'\')">'+(i===0?'<span class="cover">Cover</span>':'')+
         '<button type="button" class="rm" data-i="'+i+'" aria-label="Remove photo">×</button></div>'}).join('')+
       (uploading?'<div class="thumb up">Uploading '+uploading+'…</div>':'')+
-      (canAdd?'<button type="button" class="thumb add'+(photos.length+uploading>=lim?' locked':'')+'" id="addPh">'+
-        (photos.length+uploading>=lim?'<span class="lock">'+PLANS[needTierForPhotos(photos.length+uploading+1)].name+'</span>Add more photos':'＋ Add photos')+
-        '<small>'+(photos.length+uploading)+' of '+lim+'</small></button>':'');
+      (photos.length+uploading<LIMIT.premium?'<button type="button" class="thumb add" id="addPh">＋ Add photos</button>':'');
     t.querySelectorAll('.rm').forEach(function(b){b.addEventListener('click',function(){photos.splice(+b.dataset.i,1);renderThumbs()})});
     var add=$('addPh'); if(add) add.onclick=function(){
-      if(photos.length+uploading>=lim){
-        var need=needTierForPhotos(photos.length+uploading+1);
-        paywall('photos',need,'Add more photos with '+PLANS[need].name,PLANS[need].name+' lets you show up to '+LIMIT[need]+' photos. Listings with more photos get more buyer interest.');
-        return;
-      }
+      if(photos.length+uploading>=limit()) return photoWall(photos.length+uploading+1);
       $('files').click();
     };
-    $('phcount').textContent=photos.length+' of '+lim+' photos on your plan.';
   }
-  // Shrinks a photo to at most 1600px wide/tall as a JPEG before upload.
+  function photoWall(n){
+    var need=tierForPhotos(n);
+    paywall('photos',need,'Add more photos','Show buyers more of the business with up to '+LIMIT[need]+' photos on '+PLANS[need].name+'. Listings with more photos get more interest.');
+  }
   function shrink(file){
     return new Promise(function(resolve,reject){
       var img=new Image(), url=URL.createObjectURL(file);
@@ -274,27 +252,40 @@
         .catch(function(err){say(err.message,'err')})
         .then(function(){uploading--;renderThumbs()});
     });
-    if(all.length>files.length){
-      var need=needTierForPhotos(limit()+1);
-      paywall('photos',need,'Add more photos with '+PLANS[need].name,'Your plan includes '+limit()+' photos, so we added the first '+files.length+'. '+PLANS[need].name+' lets you show up to '+LIMIT[need]+'.');
-    }
+    if(all.length>files.length) photoWall(photos.length+uploading+(all.length-files.length));
   });
   $('description').addEventListener('input',function(){$('dcount').textContent=this.value.length});
 
-  // ---------- Extras ----------
-  $('social').addEventListener('change',function(){
-    if(this.checked&&!has('premium')){ this.checked=false; paywall('social','premium','Social promotion is a Premium extra','Premium listings are included in NextOwner\'s social media promotion, with top placement and up to 20 photos.'); }
+  // ---------- Paid features that look free ----------
+  $('video').addEventListener('change',function(){
+    var v=this.value.trim(); if(!v||has('starter'))return;
+    var input=this;
+    paywall('video','starter','Add a video tour','Listings with a video tour stand out and get more buyer interest. Video tours come with Starter and up.',
+      function(){input.value='';});
   });
+  function gate(id,need,title,text){
+    $(id).addEventListener('change',function(){
+      var cb=this; if(!cb.checked||has(need))return;
+      paywall(id,need,title,text,function(){cb.checked=false;});
+    });
+  }
+  gate('featured','featured','Feature your listing','Featured listings show above standard ones with a Featured tag, in search and on the map.');
+  gate('top','premium','Get top placement','Premium listings appear first in search results and on the map.');
+  gate('social','premium','Promote it on social media','Premium listings are included in NextOwner\'s social media promotion.');
+  function renderIncluded(){
+    document.querySelectorAll('.inc').forEach(function(e){ e.textContent=has(e.dataset.inc)&&me&&me.bestTier?'Included with your plan':''; });
+    if(has('featured')&&me&&me.bestTier) $('featured').checked=true;
+    if(has('premium')&&me&&me.bestTier){ $('top').checked=true; }
+  }
   function renderId(){
     var b=$('idbox');
-    if(me&&me.idVerified){ b.innerHTML='<div><b>✓ ID verified</b><br><span class="hint" style="color:var(--muted);font-size:13px">Your listings show the Verified badge. The check was done by Stripe Identity.</span></div>'; return; }
+    if(me&&me.idVerified){ b.innerHTML='<div><b>✓ ID verified</b><br><span style="color:var(--muted);font-size:13px">Your listings show the Verified badge. The check was done by Stripe Identity.</span></div>'; return; }
     var pending=me&&me.verifyStatus==='processing';
-    b.innerHTML='<div><b>✓ Verified badge</b> '+(me&&me.bestTier||me&&me.admin?'':'<span class="lock">Starter</span>')+
-      '<br><span style="color:var(--muted);font-size:13px">'+(pending?'Your ID check is being reviewed by Stripe. This usually takes a few minutes.':
-      'Verify your ID with Stripe Identity (photo ID + selfie, about 2 minutes). Verified listings earn more buyer trust.')+'</span></div>'+
-      (pending?'':'<button type="button" class="btn sec" id="idgo">Verify my ID</button>');
+    b.innerHTML='<div><b>✓ Verified badge</b><br><span style="color:var(--muted);font-size:13px">'+(pending?'Stripe is reviewing your ID. This usually takes a few minutes.':
+      'Verify your ID with Stripe Identity (photo ID + selfie, about 2 minutes) so buyers know you\'re real.')+'</span></div>'+
+      (pending?'':'<button type="button" class="btn sec" id="idgo">Get verified</button>');
     var go=$('idgo'); if(go) go.onclick=function(){
-      if(!(me.bestTier||me.admin)){ paywall('verify','starter','ID verification comes with every plan','Every seller plan includes a Stripe Identity check and the ✓ Verified badge on your listings.'); return; }
+      if(!has('starter')){ paywall('verify','starter','Get the ✓ Verified badge','Verified sellers get more buyer trust. The ID check by Stripe Identity comes with Starter and up.'); return; }
       go.disabled=true; say('Saving your listing…');
       saveListing(false).then(function(){ say('Opening Stripe Identity…'); return NO.api('/api/verify',{method:'POST'}); })
         .then(function(d){ if(d.url) location.href=d.url; else { me.verifyStatus=d.status; me.idVerified=d.verified; renderId(); say(''); } })
@@ -305,30 +296,29 @@
   // ---------- Save / publish ----------
   function body(publish){
     var b={}; FIELDS.forEach(function(k){b[k]=$(k).value});
-    b.photos=photos.map(function(p){return p.key}); b.wantTier=pkg; b.social=$('social').checked; b.publish=!!publish;
+    b.photos=photos.map(function(p){return p.key});
+    b.featured=$('featured').checked; b.top=$('top').checked; b.social=$('social').checked; b.publish=!!publish;
     return b;
   }
-  // Saves (creates or updates) without publishing. Resolves to the listing id.
+  function remember(d){
+    if(!editing){ editing={id:d.id,status:d.status}; $('del').hidden=false; try{history.replaceState(null,'','/sell?id='+d.id)}catch(e){} }
+    editing.status=d.status;
+  }
   function saveListing(publish){
     if(uploading) return Promise.reject(new Error('Wait for photos to finish uploading.'));
     var req=editing?NO.api('/api/listings/'+editing.id,{method:'PUT',body:body(publish)}):NO.api('/api/listings',{method:'POST',body:body(publish)});
-    return req.then(function(d){
-      if(!editing){ editing={id:d.id,status:d.status,name:$('name').value}; $('del').hidden=false; try{history.replaceState(null,'','/sell?id='+d.id)}catch(e){} }
-      editing.status=d.status; return d.id;
-    });
+    return req.then(function(d){ remember(d); return d.id; });
   }
   form.addEventListener('submit',function(e){
     e.preventDefault();
+    if(uploading){say('Wait for photos to finish uploading.','err');return}
     $('publish').disabled=true; say(editing&&editing.status==='live'?'Saving…':'Publishing…');
     var req=editing?NO.api('/api/listings/'+editing.id,{method:'PUT',body:body(true)}):NO.api('/api/listings',{method:'POST',body:body(true)});
     req.then(function(d){
-      $('publish').disabled=false;
-      if(!editing){ editing={id:d.id,status:d.status,name:$('name').value}; $('del').hidden=false; try{history.replaceState(null,'','/sell?id='+d.id)}catch(e){} }
-      editing.status=d.status;
+      $('publish').disabled=false; remember(d);
       if(d.status==='live'){ store(AFTER); location.href='/?listing='+d.id+'&published=1'; return; }
       say('Saved as a draft.');
-      paywall('publish','starter',me&&me.bestTier?'Add a plan for this listing':'Choose a plan to publish',
-        me&&me.bestTier?'Each seller plan covers one live listing, and yours are in use.':'Your listing is ready. Pick a plan and it goes live as soon as you\'ve paid. No commission on your sale.');
+      paywall('publish','starter','List another business','Your free listing is already in use. Each plan adds another live listing.');
     }).catch(function(err){ $('publish').disabled=false; say(err.message,'err'); });
   });
   $('saveDraft').addEventListener('click',function(){
@@ -344,36 +334,37 @@
   function fill(l){
     FIELDS.forEach(function(k){ var v=l[k]; if(k==='ask'||k==='revenue'||k==='cashFlow') v=fmt(v); $(k).value=v==null?'':v; });
     photos=(l.photoKeys||[]).map(function(k,i){return {key:k,url:l.allPhotos[i]}});
-    pkg=l.wantTier||pkg; $('social').checked=!!l.social;
+    $('featured').checked=!!l.featured; $('top').checked=!!l.top; $('social').checked=!!l.social;
     $('dcount').textContent=(l.description||'').length;
   }
-  function show(){ renderPkgs(); renderThumbs(); renderId(); form.hidden=false; }
+  function show(){ renderThumbs(); renderId(); renderIncluded(); form.hidden=false; }
 
   NO.session().then(function(s){
     if(!s){ location.replace('/login?next='+encodeURIComponent(location.pathname+location.search)); return; }
     email=s.user.email;
     return NO.api('/api/my-listings').then(function(d){
-      me=d; if(d.bestTier&&!params.get('tier')) pkg=d.bestTier;
+      me=d;
       var after=null; try{after=JSON.parse(read(AFTER)||'null')}catch(e){}
       var drafts=d.listings.filter(function(x){return x.status==='draft'});
       var target=editId?d.listings.filter(function(x){return x.id===editId})[0]
         :(after&&d.listings.filter(function(x){return x.id===after.id})[0])||(drafts.length?drafts[drafts.length-1]:null);
-      var findAdmin=(!target&&editId&&d.admin)?NO.api('/api/admin/listings').then(function(a){return a.listings.filter(function(x){return x.id===editId})[0]}):Promise.resolve(target);
-      return findAdmin.then(function(l){
+      var find=(!target&&editId&&d.admin)?NO.api('/api/admin/listings').then(function(a){return a.listings.filter(function(x){return x.id===editId})[0]}):Promise.resolve(target);
+      return find.then(function(l){
         if(editId&&!l){ lead.textContent='That listing wasn\'t found, or it isn\'t yours.'; return; }
         if(l){ editing=l; fill(l); $('del').hidden=false; }
-        // Just paid: publish the draft they were working on.
-        if(params.get('welcome')&&after&&l&&l.id===after.id&&l.status==='draft'&&after.publish&&d.canPublish){
-          store(AFTER); banner.hidden=false; banner.textContent='Payment received. Publishing your listing…';
-          return NO.api('/api/listings/'+l.id,{method:'PUT',body:Object.assign(l,{publish:true,photos:l.photoKeys})}).then(function(r){
-            if(r.status==='live') location.href='/?listing='+l.id+'&published=1';
-            else { banner.className='banner info'; banner.textContent='Payment received. Your plan can take a minute to show up. Press Publish again in a moment.'; show(); }
-          });
+        if(params.get('welcome')){
+          store(AFTER); banner.hidden=false;
+          banner.textContent=d.bestTier?'Payment received. Your '+PLANS[d.bestTier].name+' features are unlocked.':'Payment received. It can take a minute to show up here.';
+          if(after&&after.publish&&l&&l.status==='draft'&&d.canPublish){
+            banner.textContent='Payment received. Publishing your listing…';
+            return NO.api('/api/listings/'+l.id,{method:'PUT',body:Object.assign({},l,{publish:true,photos:l.photoKeys})}).then(function(r){
+              if(r.status==='live') location.href='/?listing='+l.id+'&published=1'; else show();
+            });
+          }
         }
-        if(params.get('welcome')){ store(AFTER); banner.hidden=false; banner.textContent=d.bestTier?'Payment received. Your '+PLANS[d.bestTier].name+' plan is active.':'Payment received. It can take a minute to show up here.'; }
         if(l&&l.status==='live'){ $('title').textContent='Edit listing'; lead.textContent='Changes go live as soon as you save.'; $('publish').textContent='Save changes'; $('saveDraft').hidden=true; }
         else if(l){ $('title').textContent='Finish your listing'; lead.textContent='Your draft is saved. Publish when you\'re ready.'; }
-        else { lead.textContent='Fill it in, preview your options, and publish when you\'re ready. You only pay when you publish. Fields marked * are required.'; $('contactEmail').value=email; }
+        else { lead.textContent='Listing your business on NextOwner is free. Add your details and photos, then publish. Fields marked * are required.'; $('contactEmail').value=email; }
         show();
       });
     });

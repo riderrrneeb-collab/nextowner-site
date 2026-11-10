@@ -38,13 +38,13 @@ export default async (req) => {
       const listing = {
         ...value, ...coords, id: newId(), owner: email, createdAt: now, updatedAt: now,
         status: body.publish && canPublish ? "live" : "draft",
-        verified: !!seller.idVerified, active: false, tier: "starter",
+        verified: !!seller.idVerified, active: false, tier: "free",
       };
       await saveListing(listing);
       await syncOwner(email, before.plans);
       return json({
         ok: true, id: listing.id, status: listing.status,
-        needPlan: !!body.publish && listing.status === "draft", hasPlan: before.slots > 0,
+        needPlan: !!body.publish && listing.status === "draft", hasPlan: (before.paidSlots || 0) > 0,
       }, 201);
     }
 

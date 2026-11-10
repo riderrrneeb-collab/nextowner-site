@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NextOwner · Businesses for sale near you</title>
-<meta name="description" content="Browse small businesses for sale near you. List yours for a flat monthly price with no commission.">
+<meta name="description" content="Browse small businesses for sale near you. List yours free, with no commission.">
 <style>
   :root{
     --bg:#f3f6fb; --ink:#0f172a; --muted:#5b6474; --glass:rgba(255,255,255,.6);
@@ -75,6 +75,7 @@
   .cbox a{color:var(--accent);font-weight:600;text-decoration:none}
   .img .feat{position:absolute;right:12px;top:12px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff}
   .img .exb{position:absolute;right:12px;top:12px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(15,23,42,.65);color:#fff}
+  .upnote{margin:4px 2px 0;color:var(--muted);font-size:13px;line-height:1.5}
   .listcard{display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;color:var(--ink);border:2px dashed rgba(10,132,255,.35);background:linear-gradient(135deg,rgba(10,132,255,.06),rgba(124,92,255,.08));min-height:260px}
   .listcard:hover{border-color:var(--accent)}
   .lcin{padding:24px}
@@ -287,7 +288,7 @@
         <div class="step"><span class="num">2</span><div><b>Find your best fit</b><span>✦ Best Picks ranks listings by return on investment for your budget and location.</span></div></div>
         <div class="step"><span class="num">3</span><div><b>Talk to the owner</b><span>Log in free to get the seller's contact details. A ✓ Verified badge means the seller passed an ID check by Stripe Identity.</span></div></div>
       </div>
-      <p class="sellnote">Selling? List for one flat monthly price with no commission. <button type="button" data-open-plans>See seller plans →</button></p>
+      <p class="sellnote">Selling? Listing is free, with no commission on your sale. <button type="button" data-open-plans>List your business →</button></p>
     </section>
   </header>
 
@@ -406,7 +407,7 @@
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
   <button type="button" class="x" id="closePlans" aria-label="Close">×</button>
   <h1 id="mt">See every business for sale near you.</h1>
-  <p class="sub">NextOwner is a marketplace for small businesses: food trucks, studios, gyms, service routes and more. List yours for one flat monthly price, with no commission. Build your listing free and pay when you publish.</p>
+  <p class="sub">NextOwner is a marketplace for small businesses: food trucks, studios, gyms, service routes and more. List yours free, with no commission on your sale.</p>
 
   <div class="tabs" role="tablist">
     <button type="button" class="on" data-tab="sell">I'm selling</button>
@@ -414,18 +415,11 @@
   </div>
 
   <div class="pane" data-pane="sell">
-    <a class="plan" href="/sell?tier=starter">
-      <div><b>Starter</b><small>Up to 5 photos, video tour link, ID-verified badge</small></div>
-      <div class="p">$29<small>/month</small></div>
+    <a class="plan pop" href="/sell">
+      <div><b>List your business free</b><small>Photos, your numbers and contact details. Live in minutes.</small></div>
+      <div class="p">$0</div>
     </a>
-    <a class="plan pop" href="/sell?tier=featured">
-      <div><b>Featured</b><small>Up to 12 photos, Featured tag, shown above Starter listings</small></div>
-      <div class="p">$59<small>/month</small></div>
-    </a>
-    <a class="plan" href="/sell?tier=premium">
-      <div><b>Premium</b><small>Up to 20 photos, top placement, social promotion</small></div>
-      <div class="p">$119<small>/month</small></div>
-    </a>
+    <p class="upnote">Want more? Add a video tour, the ✓ Verified badge, featured or top placement any time while you list.</p>
   </div>
 
   <div class="pane" data-pane="buy" hidden>
@@ -500,7 +494,7 @@
     L=REAL.concat(REAL.length<MIN_SHOWN?EXAMPLES:[]);
     g.innerHTML=''; m.innerHTML='';
     var lc=document.createElement('a'); lc.className='card listcard'; lc.href='/sell';
-    lc.innerHTML='<div class="lcin"><div class="lcplus">＋</div><h3>List your business</h3><p>Add photos, your numbers and a video tour. Preview everything free and pay only when you publish.</p><span class="lcbtn">Start your listing</span></div>';
+    lc.innerHTML='<div class="lcin"><div class="lcplus">＋</div><h3>List your business</h3><p>It\'s free. Add photos, your numbers and contact details, and go live in minutes.</p><span class="lcbtn">Start your listing</span></div>';
     g.appendChild(lc);
     L.forEach(function(x,i){
       var c=document.createElement('div'); c.className='card'; c.tabIndex=0; c.setAttribute('role','button');

@@ -35,7 +35,8 @@
   .toggle button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:15px;padding:9px 18px;border-radius:999px;cursor:pointer}
   .toggle button.on{background:var(--ink);color:var(--bg)}
   .save{font-size:12px;color:#16a34a;font-weight:600;margin-left:4px}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:36px 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:36px 0 18px}
+  @media (max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:900px){.grid{grid-template-columns:1fr}}
   .card{position:relative;padding:28px;border-radius:28px;background:var(--glass);border:1px solid var(--edge);
     backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);box-shadow:var(--shadow);
@@ -79,7 +80,7 @@
 
   <header>
     <h1>Sell your business.<br>Keep 100% of the sale.</h1>
-    <p class="sub">A flat monthly plan to list your business. No commission, no hidden fees, cancel anytime.</p>
+    <p class="sub">List free. Upgrade for more photos, a video tour, the Verified badge and top placement. No commission, cancel anytime.</p>
     <div class="toggle" role="group" aria-label="Billing period">
       <button type="button" class="on" data-period="monthly">Monthly</button>
       <button type="button" data-period="yearly">Yearly <span class="save">2 months free</span></button>
@@ -88,11 +89,19 @@
 
   <section class="grid" aria-label="Seller plans">
     <div class="card">
+      <h3>Free</h3>
+      <p class="desc">Get your business in front of buyers at no cost.</p>
+      <div><span class="price">$0</span> <span class="per">forever</span></div>
+      <div class="note"></div>
+      <ul><li>One business listing</li><li>Up to 5 photos</li><li>Your numbers, description and contact details</li><li>Shown on the map and in search</li></ul>
+      <a class="btn" href="/sell">List for free</a>
+    </div>
+    <div class="card">
       <h3>Starter</h3>
       <p class="desc">Everything you need to get your business in front of buyers.</p>
       <div><span class="price" data-m="$29" data-y="$290">$29</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
       <div class="note" data-m="" data-y="That's about $24/month"></div>
-      <ul><li>One business listing</li><li>Up to 5 photos</li><li>Video tour link</li><li>✓ Verified badge after an ID check by Stripe Identity</li></ul>
+      <ul><li>Everything in Free</li><li>Up to 10 photos</li><li>Video tour</li><li>✓ Verified badge after an ID check by Stripe Identity</li></ul>
       <a class="btn" data-m="https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00" data-y="https://buy.stripe.com/7sY7sKahcg3T25h1IP3sI01" href="https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00">List my business</a>
     </div>
     <div class="card pop">
@@ -101,7 +110,7 @@
       <p class="desc">Get seen first by local buyers searching your area.</p>
       <div><span class="price" data-m="$59" data-y="$590">$59</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
       <div class="note" data-m="" data-y="That's about $49/month"></div>
-      <ul><li>Everything in Starter</li><li>Up to 12 photos</li><li>Featured tag</li><li>Shown above Starter listings and on the map</li></ul>
+      <ul><li>Everything in Starter</li><li>Up to 15 photos</li><li>Featured tag</li><li>Shown above standard listings and on the map</li></ul>
       <a class="btn" data-m="https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02" data-y="https://buy.stripe.com/eVq7sK7503h7fW7afl3sI03" href="https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02">Get Featured</a>
     </div>
     <div class="card">
@@ -109,7 +118,7 @@
       <p class="desc">Maximum exposure on NextOwner and beyond.</p>
       <div><span class="price" data-m="$119" data-y="$1,190">$119</span> <span class="per" data-m="/month" data-y="/year">/month</span></div>
       <div class="note" data-m="" data-y="That's about $99/month"></div>
-      <ul><li>Everything in Featured</li><li>Up to 20 photos</li><li>Top placement</li><li>NextOwner social media promotion</li></ul>
+      <ul><li>Everything in Featured</li><li>Up to 25 photos</li><li>Top placement</li><li>NextOwner social media promotion</li></ul>
       <a class="btn" data-m="https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04" data-y="https://buy.stripe.com/8x28wOexsg3TfW71IP3sI05" href="https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04">Go Premium</a>
     </div>
   </section>
