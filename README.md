@@ -45,7 +45,9 @@ Static pages plus three small Netlify Functions that power member logins.
 ## Listings
 
 - Listings and photos are stored in Netlify Blobs (stores `listings` and `listing-photos`); nothing to set up.
+- Anyone logged in can build a listing and save it as a draft (max 3 drafts). Publishing needs a seller plan; extra photos (5 / 12 / 20 by plan), higher placement and social promotion are paywalled in the form.
 - Each active seller plan allows one live listing. If a plan is canceled, the daily `sync-listings` job takes the listing offline; it comes back when the plan is renewed.
 - Seller contact details are only returned to logged-in visitors (`/api/contact/:id`).
+- ID verification uses Stripe Identity (photo ID + selfie, `/api/verify`). Turn on Identity in the Stripe Dashboard and give the restricted key **write** access to Identity verification sessions. Verified sellers' listings get the ✓ Verified badge automatically; the daily job finishes checks that were still processing.
 - Admins (mynextownerofficial@gmail.com, plus any emails in the `ADMIN_EMAILS` variable, comma-separated) can create listings without a plan and verify, hide or delete any listing at /admin.
 - Example listings fill the homepage until there are 6 real ones, and are labeled "Example".

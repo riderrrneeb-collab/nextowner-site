@@ -1,10 +1,14 @@
 // GET  /api/listings  — every live listing, best placement first (public)
-// POST /api/listings  — create a listing (logged-in seller with an open plan slot)
+// POST /api/listings  — create a listing. Anyone logged in can save a draft;
+//                       publishing needs an open seller-plan slot.
 import { json, verifiedEmail } from "../lib/shared.mjs";
 import {
   allListings, isPublic, sortForDisplay, publicView, cleanListing, geocodeZip,
-  newId, saveListing, syncOwner, isAdmin,
+  newId, saveListing, syncOwner, getSeller,
 } from "../lib/listings.mjs";
+
+const MAX_DRAFTS = 3;
+const MAX_LISTINGS = 50;
 
 export default async (req) => {
   try {
@@ -18,27 +22,30 @@ export default async (req) => {
     if (req.method === "POST") {
       const email = await verifiedEmail(req);
       if (!email) return json({ error: "Please log in." }, 401);
-      const admin = isAdmin(email);
-      const { mine, slots, plans } = await syncOwner(email);
-      if (!admin && slots === 0) {
-        return json({ error: "You need a seller plan to list a business.", needPlan: true }, 402);
-      }
-      if (!admin && mine.length >= slots) {
-        return json({ error: "Each seller plan includes one listing. Add another plan to list another business.", needPlan: true }, 409);
+      const before = await syncOwner(email);
+      if (before.mine.length >= MAX_LISTINGS) return json({ error: "You've reached the listing limit for one account." }, 409);
+      if (before.mine.filter((l) => l.status === "draft").length >= MAX_DRAFTS) {
+        return json({ error: "You already have " + MAX_DRAFTS + " unpublished drafts. Publish or delete one first." }, 409);
       }
       let body;
       try { body = await req.json(); } catch { return json({ error: "Invalid request." }, 400); }
       const { value, errors } = cleanListing(body, email);
       if (errors.length) return json({ error: "Please check: " + errors.join(", ") + ".", fields: errors }, 400);
       const coords = await geocodeZip(value.zip);
+      const seller = await getSeller(email);
       const now = Date.now();
+      const canPublish = before.admin || before.used < before.slots;
       const listing = {
         ...value, ...coords, id: newId(), owner: email, createdAt: now, updatedAt: now,
-        status: "live", verified: false, active: admin, tier: "starter",
+        status: body.publish && canPublish ? "live" : "draft",
+        verified: !!seller.idVerified, active: false, tier: "starter",
       };
       await saveListing(listing);
-      if (!admin) await syncOwner(email, plans);
-      return json({ ok: true, id: listing.id }, 201);
+      await syncOwner(email, before.plans);
+      return json({
+        ok: true, id: listing.id, status: listing.status,
+        needPlan: !!body.publish && listing.status === "draft", hasPlan: before.slots > 0,
+      }, 201);
     }
 
     return json({ error: "Method not allowed" }, 405);

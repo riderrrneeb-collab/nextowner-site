@@ -3,7 +3,7 @@
 // DELETE /api/listings/:id — remove (owner or admin)
 import { json, verifiedEmail } from "../lib/shared.mjs";
 import {
-  getListing, isPublic, publicView, cleanListing, geocodeZip, saveListing, removeListing, isAdmin, photosStore,
+  getListing, isPublic, publicView, cleanListing, geocodeZip, saveListing, removeListing, isAdmin, photosStore, syncOwner,
 } from "../lib/listings.mjs";
 
 export default async (req, context) => {
@@ -33,7 +33,16 @@ export default async (req, context) => {
       const updated = { ...listing, ...value, ...coords, updatedAt: Date.now() };
       await saveListing(updated);
       await Promise.all(removed.map((k) => photosStore().delete(k).catch(() => {})));
-      return json({ ok: true, id: updated.id });
+      // Publishing a draft needs an open seller-plan slot.
+      let needPlan = false;
+      if (body.publish && updated.status === "draft") {
+        const owner = await syncOwner(updated.owner);
+        const fresh = owner.mine.find((l) => l.id === updated.id);
+        if (owner.admin || (fresh && fresh.active)) { fresh.status = "live"; fresh.updatedAt = Date.now(); await saveListing(fresh); updated.status = "live"; }
+        else needPlan = true;
+        return json({ ok: true, id: updated.id, status: updated.status, needPlan, hasPlan: owner.slots > 0 });
+      }
+      return json({ ok: true, id: updated.id, status: updated.status });
     }
 
     if (req.method === "DELETE") {

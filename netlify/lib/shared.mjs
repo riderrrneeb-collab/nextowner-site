@@ -114,3 +114,6 @@ export async function plansFor(customers) {
 export async function portalSession(customer, returnUrl) {
   return stripe("POST", "billing_portal/sessions", [["customer", customer], ["return_url", returnUrl]]);
 }
+
+// Generic Stripe API call for other helpers (e.g. Stripe Identity).
+export const stripeRequest = stripe;

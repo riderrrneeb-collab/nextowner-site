@@ -1,7 +1,7 @@
 // POST /api/photos       — upload one listing photo (logged-in seller or admin)
 // GET  /api/photos/<key> — serve a listing photo
 import { randomUUID } from "node:crypto";
-import { json, verifiedEmail, customersFor, plansFor } from "../lib/shared.mjs";
+import { json, verifiedEmail } from "../lib/shared.mjs";
 import { photosStore, ownerKey, isAdmin, PHOTO_KEY } from "../lib/listings.mjs";
 
 const TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -27,9 +27,10 @@ export default async (req) => {
     if (req.method === "POST") {
       const email = await verifiedEmail(req);
       if (!email) return json({ error: "Please log in." }, 401);
+      // Anyone logged in can add photos to a draft; cap storage per account.
       if (!isAdmin(email)) {
-        const plans = await plansFor(await customersFor(email));
-        if (!plans.some((p) => p.side === "seller")) return json({ error: "You need a seller plan to upload photos." }, 402);
+        const { blobs } = await photosStore().list({ prefix: ownerKey(email) + "/" });
+        if (blobs.length >= 80) return json({ error: "Photo limit reached for this account. Remove some photos first." }, 409);
       }
       const type = (req.headers.get("content-type") || "").split(";")[0].trim();
       const ext = TYPES[type];

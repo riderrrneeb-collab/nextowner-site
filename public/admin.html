@@ -29,15 +29,16 @@
 <main class="wide">
   <div class="panel">
     <h1>Listings admin</h1>
-    <p class="guide">Mark a listing <b>Verified</b> only after you've checked the seller's photo ID and proof they own the business (for example a business license, state filing or tax return in their name). Hide anything that looks like a scam.</p>
+    <p class="guide">Sellers get the <b>✓ Verified</b> badge automatically when they pass a Stripe Identity check (photo ID + selfie). The buttons below are manual overrides, for example to remove a badge from a listing that looks wrong. Hide anything that looks like a scam.</p>
     <div class="bar" id="bar">
       <button type="button" class="on" data-f="all">All</button>
       <button type="button" data-f="unverified">Needs verification</button>
       <button type="button" data-f="live">Live</button>
       <button type="button" data-f="offline">Offline (no plan)</button>
       <button type="button" data-f="hidden">Hidden</button>
+      <button type="button" data-f="draft">Drafts</button>
     </div>
-    <div class="row" style="margin-bottom:16px"><a class="btn" href="/sell" style="margin-top:0">Add a listing for a seller or broker</a></div>
+    <div class="row" style="margin-bottom:16px"><a class="btn" href="/sell" style="margin-top:0">Add a listing (no plan needed for admins)</a></div>
     <div id="list">Loading…</div>
     <div class="msg" id="msg" role="status"></div>
   </div>
@@ -48,11 +49,11 @@
   var rows=[], filter='all', list=document.getElementById('list'), msg=document.getElementById('msg');
   function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
   function day(t){return t?new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):''}
-  function state(l){return l.status==='hidden'?'hidden':(l.active?'live':'offline')}
+  function state(l){return l.status==='hidden'?'hidden':(l.status==='draft'?'draft':(l.active?'live':'offline'))}
   function render(){
     var shown=rows.filter(function(l){
       if(filter==='all')return true;
-      if(filter==='unverified')return !l.verified&&l.status!=='hidden';
+      if(filter==='unverified')return !l.verified&&l.status==='live';
       return state(l)===filter;
     });
     if(!shown.length){list.innerHTML='<div class="empty">Nothing here.</div>';return}
@@ -61,11 +62,11 @@
       return '<div class="item" data-id="'+l.id+'"><div class="top"><div><b>'+esc(l.name)+'</b>'+
         '<div class="meta">'+esc(l.category)+' · '+esc(l.city)+', '+esc(l.state)+' · Asking $'+Number(l.ask).toLocaleString()+
         ' · Cash flow $'+Number(l.cashFlow).toLocaleString()+'<br>Owner: '+esc(l.owner)+' · Contact: '+esc(l.contactName)+' '+esc(l.contactEmail)+' '+esc(l.contactPhone)+
-        '<br>Created '+day(l.createdAt)+' · '+(l.tier||'starter')+' plan · '+l.photos.length+' photo'+(l.photos.length===1?'':'s')+'</div></div>'+
-        '<div class="pills"><span class="pill '+(s==='live'?'ok':'warn')+'">'+({live:'Live',offline:'Offline: no plan',hidden:'Hidden'})[s]+'</span>'+
+        '<br>Created '+day(l.createdAt)+' · '+(l.tier||'starter')+' plan · '+l.photoKeys.length+' photo'+(l.photoKeys.length===1?'':'s')+(l.social?' · <b>social promotion requested</b>':'')+'</div></div>'+
+        '<div class="pills"><span class="pill '+(s==='live'?'ok':'warn')+'">'+({live:'Live',offline:'Offline: no plan',hidden:'Hidden',draft:'Draft'})[s]+'</span>'+
         (l.verified?'<span class="pill ok">✓ Verified</span>':'<span class="pill warn">Not verified</span>')+'</div></div>'+
         '<div class="acts">'+
-          '<button type="button" class="'+(l.verified?'':'go')+'" data-act="verify">'+(l.verified?'Remove verified badge':'Mark verified')+'</button>'+
+          '<button type="button" class="'+(l.verified?'':'go')+'" data-act="verify">'+(l.verified?'Remove badge (override)':'Add badge (override)')+'</button>'+
           '<button type="button" data-act="hide">'+(l.status==='hidden'?'Unhide':'Hide')+'</button>'+
           '<a href="/?listing='+l.id+'">View</a><a href="/sell?id='+l.id+'">Edit</a>'+
           '<button type="button" class="bad" data-act="delete">Delete</button></div></div>';

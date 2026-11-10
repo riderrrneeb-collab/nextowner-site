@@ -7,7 +7,11 @@ import { customersFor, plansFor } from "./shared.mjs";
 
 export const CATEGORIES = ["Food & drink", "Fitness", "Services", "Retail", "Routes", "Other"];
 const RANK = { premium: 3, featured: 2, starter: 1 };
-const MAX_PHOTOS = 8;
+const MAX_PHOTOS = 20;
+// Photos shown publicly per plan. Drafts without a plan can hold the Starter amount.
+export const PHOTO_LIMIT = { starter: 5, featured: 12, premium: 20 };
+export const TIERS = ["starter", "featured", "premium"];
+export const tierRank = (t) => RANK[t] || 0;
 
 // NextOwner admins can verify, hide or remove any listing.
 export function isAdmin(email) {
@@ -41,7 +45,7 @@ export async function removeListing(l) {
   await Promise.all((l.photos || []).map((k) => photosStore().delete(k).catch(() => {})));
 }
 
-export const isPublic = (l) => l.status !== "hidden" && l.active === true;
+export const isPublic = (l) => l.status === "live" && l.active === true;
 
 export function sortForDisplay(list) {
   return list.sort((a, b) => (RANK[b.tier] || 0) - (RANK[a.tier] || 0) || b.createdAt - a.createdAt);
@@ -55,7 +59,7 @@ export function publicView(l) {
     ask: l.ask, revenue: l.revenue, cashFlow: l.cashFlow,
     yearEstablished: l.yearEstablished ?? null, employees: l.employees ?? null,
     description: l.description, reason: l.reason || "", video: l.video || "",
-    photos: (l.photos || []).map((k) => `/api/photos/${k}`),
+    photos: (l.photos || []).slice(0, PHOTO_LIMIT[l.tier] || PHOTO_LIMIT.starter).map((k) => `/api/photos/${k}`),
     verified: !!l.verified, tier: l.tier || "starter", createdAt: l.createdAt,
   };
 }
@@ -65,6 +69,8 @@ export function ownerView(l) {
   return {
     ...publicView(l),
     zip: l.zip || "", photoKeys: l.photos || [],
+    allPhotos: (l.photos || []).map((k) => `/api/photos/${k}`),
+    wantTier: l.wantTier || "starter", social: !!l.social,
     contactName: l.contactName || "", contactEmail: l.contactEmail || "", contactPhone: l.contactPhone || "",
     status: l.status, active: !!l.active, owner: l.owner, updatedAt: l.updatedAt,
   };
@@ -106,6 +112,8 @@ export function cleanListing(input, ownerEmail, allowForeignPhotos = []) {
     contactEmail: text(input.contactEmail, 120).toLowerCase(),
     contactPhone: text(input.contactPhone, 30),
     photos: [],
+    wantTier: TIERS.includes(input.wantTier) ? input.wantTier : "starter",
+    social: input.social === true,
   };
   if (v.name.length < 3) errors.push("Business name");
   if (!v.category) errors.push("Category");
@@ -151,11 +159,17 @@ export async function syncOwner(email, plans, listings) {
   if (!plans) plans = await plansFor(await customersFor(email));
   const seller = plans.filter((p) => p.side === "seller").sort((a, b) => RANK[b.tier] - RANK[a.tier]);
   const all = listings || (await allListings());
-  const mine = all.filter((l) => l.owner === email).sort((a, b) => a.createdAt - b.createdAt);
+  const mine = all.filter((l) => l.owner === email)
+    .sort((a, b) => (a.status === "draft") - (b.status === "draft") || a.createdAt - b.createdAt);
+  const used = mine.filter((l) => l.status !== "draft").length;
+  const bestTier = seller[0] ? seller[0].tier : null;
   if (isAdmin(email)) {
     // NextOwner's own listings (for example, ones set up for brokers) don't need a plan.
-    for (const l of mine) if (l.active !== true) { l.active = true; await saveListing(l); }
-    return { mine, slots: Infinity, plans };
+    for (const l of mine) {
+      const tier = TIERS.includes(l.wantTier) ? l.wantTier : "starter";
+      if (l.active !== true || l.tier !== tier) { l.active = true; l.tier = tier; await saveListing(l); }
+    }
+    return { mine, slots: Infinity, plans, used, bestTier: "premium", admin: true };
   }
   for (let i = 0; i < mine.length; i++) {
     const l = mine[i];
@@ -168,5 +182,24 @@ export async function syncOwner(email, plans, listings) {
       await saveListing(l);
     }
   }
-  return { mine, slots: seller.length, plans };
+  return { mine, slots: seller.length, plans, used, bestTier, admin: false };
+}
+
+// ---------- Sellers (ID verification) ----------
+
+const sellersStore = () => getStore({ name: "sellers", consistency: "strong" });
+export const getSeller = async (email) => (await sellersStore().get(ownerKey(email), { type: "json" })) || { email };
+export const saveSeller = (seller) => sellersStore().setJSON(ownerKey(seller.email), seller);
+export async function allSellers() {
+  const store = sellersStore();
+  const { blobs } = await store.list();
+  return (await Promise.all(blobs.map((b) => store.get(b.key, { type: "json" })))).filter(Boolean);
+}
+
+// Gives every listing by this seller the ID-verified badge.
+export async function markOwnerVerified(email, listings) {
+  const all = listings || (await allListings());
+  for (const l of all.filter((x) => x.owner === email)) {
+    if (!l.verified) { l.verified = true; l.verifiedAt = Date.now(); l.verifiedBy = "stripe_identity"; await saveListing(l); }
+  }
 }

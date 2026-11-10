@@ -59,35 +59,55 @@
     });
   }
 
-  var STATUS={live:['ok','Live'],offline:['warn','Offline: needs a seller plan'],hidden:['warn','Hidden by NextOwner']};
+  var STATUS={live:['ok','Live'],offline:['warn','Offline: needs a seller plan'],hidden:['warn','Hidden by NextOwner'],draft:['warn','Draft: not published']};
   function renderListings(d){
     var p=document.getElementById('lpanel'), c=document.getElementById('lcontent');
-    if(!d.listings.length && !d.canCreate && !d.admin) return;
+    var seller=!!d.bestTier||d.admin;
     p.hidden=false;
     var h='';
     if(d.listings.length){
       h+='<div class="plans">';
       d.listings.forEach(function(l){
-        var st=l.status==='hidden'?STATUS.hidden:(l.active?STATUS.live:STATUS.offline);
+        var st=l.status==='hidden'?STATUS.hidden:(l.status==='draft'?STATUS.draft:(l.active?STATUS.live:STATUS.offline));
         h+='<div class="plan"><div><b>'+esc(l.name)+'</b><small>'+esc(l.city+', '+l.state)+' · Asking $'+Number(l.ask).toLocaleString()+
           (l.verified?' · ✓ Verified':'')+'</small>'+
-          '<small class="lact"><a href="/?listing='+l.id+'">View</a> · <a href="/sell?id='+l.id+'">Edit</a></small></div>'+
+          '<small class="lact">'+(l.status==='live'&&l.active?'<a href="/?listing='+l.id+'">View</a> · ':'')+'<a href="/sell?id='+l.id+'">'+(l.status==='draft'?'Finish and publish':'Edit')+'</a></small></div>'+
           '<span class="pill '+st[0]+'">'+st[1]+'</span></div>';
       });
       h+='</div>';
     } else {
       h+='<div class="empty">You haven\'t listed a business yet.</div>';
     }
+    // ID verification (Stripe Identity)
+    if(seller){
+      h+='<div class="plan" style="margin-top:12px"><div><b>'+(d.idVerified?'✓ ID verified':'ID verification')+'</b><small>'+
+        (d.idVerified?'Your listings show the Verified badge. Checked by Stripe Identity.':
+         d.verifyStatus==='processing'?'Stripe is reviewing your ID. This usually takes a few minutes.':
+         'Verify your ID with Stripe Identity (photo ID + selfie) to earn the ✓ Verified badge.')+'</small></div>'+
+        (d.idVerified||d.verifyStatus==='processing'?'':'<button class="btn sec" id="idgo" type="button" style="width:auto;margin:0;padding:10px 16px">Verify my ID</button>')+'</div>';
+    }
     h+='<div class="row">';
-    if(d.canCreate) h+='<a class="btn" href="/sell">'+(d.listings.length?'Add another listing':'Create your listing')+'</a>';
+    h+='<a class="btn" href="/sell">'+(d.listings.some(function(l){return l.status==='draft'})?'Continue your draft':(d.listings.length?'Add another listing':'List a business'))+'</a>';
     if(d.admin) h+='<a class="btn sec" href="/admin">Admin: review all listings</a>';
     h+='</div>';
     c.innerHTML=h;
+    var go=document.getElementById('idgo');
+    if(go) go.addEventListener('click',function(){
+      go.disabled=true; msg.className='msg'; msg.textContent='Opening Stripe Identity…';
+      NO.api('/api/verify',{method:'POST'}).then(function(r){ if(r.url) location.href=r.url; else location.reload(); })
+        .catch(function(e){ go.disabled=false; msg.className='msg err'; msg.textContent=e.message; });
+    });
   }
 
   NO.session().then(function(s){
     if(!s){ location.replace('/login?next=/account'); return; }
-    NO.api('/api/my-listings').then(renderListings).catch(function(){});
+    var back=new URLSearchParams(location.search).get('verify');
+    (back?NO.api('/api/verify').catch(function(){}):Promise.resolve()).then(function(v){
+      if(v){ msg.className='msg'+(v.verified?' ok':''); msg.textContent=v.verified?'ID verified. Your listings now show the ✓ Verified badge.':
+        v.status==='processing'?'Thanks! Stripe is reviewing your ID. Your badge appears automatically once it\'s approved.':
+        v.status==='requires_input'?'The ID check wasn\'t finished'+(v.error?' ('+v.error.replace(/_/g,' ')+')':'')+'. You can try again below.':''; }
+      return NO.api('/api/my-listings').then(renderListings);
+    }).catch(function(){});
     return NO.membership(true).then(function(m){
       if(!m){ who.textContent='Signed in as '+s.user.email; msg.className='msg err'; msg.textContent='Could not load your plans. Refresh to try again.'; return; }
       render(m);
