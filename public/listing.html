@@ -131,6 +131,8 @@
          '<a class="btn sec" href="/broker/'+encodeURIComponent(x.broker.slug)+'">See all their listings</a></section>':'')+
        '<section class="box"><h2>Selling a business?</h2><p class="sub" style="margin:0 0 4px">List yours free and reach buyers near you.</p><a class="btn sec" href="/sell">List your business</a></section></aside></div>';
     page.innerHTML=h;
+    // Count one view per listing per browser session (examples aren't counted).
+    if(!x.example){ try{ var vk='no_viewed_'+x.id; if(!sessionStorage.getItem(vk)){ sessionStorage.setItem(vk,'1'); fetch('/api/listings/'+encodeURIComponent(x.id)+'/view',{method:'POST',keepalive:true}).catch(function(){}); } }catch(e){} }
     if(new URLSearchParams(location.search).get('published')){
       var t=document.createElement('div'); t.className='toast'; t.textContent='Your listing is live.'; document.body.appendChild(t);
       setTimeout(function(){t.remove()},4000); try{history.replaceState(null,'',location.pathname)}catch(e){}

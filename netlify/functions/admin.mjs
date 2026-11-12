@@ -4,6 +4,7 @@
 //                                  or { owner: "broker@email" } to hand a listing set up by NextOwner to its broker
 import { json, verifiedEmail } from "../lib/shared.mjs";
 import { allListings, getListing, saveListing, ownerView, isAdmin, syncOwner, getSeller } from "../lib/listings.mjs";
+import { summaries } from "../lib/stats.mjs";
 
 export default async (req, context) => {
   try {
@@ -13,7 +14,9 @@ export default async (req, context) => {
 
     const id = context.params && context.params.id;
     if (req.method === "GET" && !id) {
-      const rows = (await allListings()).sort((a, b) => b.createdAt - a.createdAt).map(ownerView);
+      const all = (await allListings()).sort((a, b) => b.createdAt - a.createdAt);
+      const stats = await summaries(all.map((l) => l.id));
+      const rows = all.map((l) => ({ ...ownerView(l), stats: stats[l.id] }));
       return json({ listings: rows });
     }
 

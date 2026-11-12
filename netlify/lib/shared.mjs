@@ -82,7 +82,10 @@ const NAMES = {
   featured: "Seller Featured",
   premium: "Seller Premium",
   buyer_premium: "Buyer Premium",
+  broker_pro: "Broker Pro",
 };
+// How many live listings a seller plan covers, and at which listing tier.
+const LISTINGS = { broker_pro: { count: 50, tier: "featured" } };
 
 // The user's current NextOwner plans, read from Stripe subscriptions.
 export async function plansFor(customers) {
@@ -98,6 +101,8 @@ export async function plansFor(customers) {
           tier,
           name: NAMES[tier],
           side: tier === "buyer_premium" ? "buyer" : "seller",
+          listings: (LISTINGS[tier] || { count: 1 }).count,
+          listingTier: (LISTINGS[tier] || { tier }).tier,
           billing: item.price.recurring?.interval === "year" ? "yearly" : "monthly",
           amount: item.price.unit_amount,
           status: s.status,

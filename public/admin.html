@@ -69,7 +69,7 @@
       return '<div class="item" data-id="'+l.id+'"><div class="top"><div><b>'+esc(l.name)+'</b>'+
         '<div class="meta">'+esc(l.category==='Other'&&l.categoryOther?l.categoryOther:l.category)+' · '+esc(l.city)+', '+esc(l.state)+' · Asking $'+Number(l.ask).toLocaleString()+
         ' · Cash flow $'+Number(l.cashFlow).toLocaleString()+'<br>Owner: '+esc(l.owner)+' · Contact: '+esc(l.contactName)+' '+esc(l.contactEmail)+' '+esc(l.contactPhone)+
-        '<br>Created '+day(l.createdAt)+' · '+(l.tier||'free')+' plan · '+l.photoKeys.length+' photo'+(l.photoKeys.length===1?'':'s')+(l.social?' · <b>social promotion</b>':'')+(l.top?' · top placement':'')+'</div></div>'+
+        '<br>Created '+day(l.createdAt)+(l.stats?' · '+l.stats.views30+' views, '+l.stats.inquiries30+' inquiries (30 days)':'')+' · '+(l.tier||'free')+' plan · '+l.photoKeys.length+' photo'+(l.photoKeys.length===1?'':'s')+(l.social?' · <b>social promotion</b>':'')+(l.top?' · top placement':'')+'</div></div>'+
         '<div class="pills"><span class="pill '+(s==='live'?'ok':'warn')+'">'+({live:'Live',offline:'Offline: no plan',hidden:'Hidden',draft:'Draft'})[s]+'</span>'+
         (l.verified?'<span class="pill ok">✓ Verified</span>':'<span class="pill warn">Not verified</span>')+'</div></div>'+
         '<div class="acts">'+

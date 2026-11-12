@@ -84,8 +84,8 @@
     <h1>Sell your business.<br>Keep 100% of the sale.</h1>
     <p class="sub">List free. Upgrade for more photos, a video tour, the Verified badge and top placement. No commission, cancel anytime.</p>
     <div class="toggle" role="group" aria-label="Billing period">
-      <button type="button" class="on" data-period="monthly">Monthly</button>
-      <button type="button" data-period="yearly">Yearly <span class="save">2 months free</span></button>
+      <button type="button" data-period="monthly">Monthly</button>
+      <button type="button" class="on" data-period="yearly">Yearly <span class="save">2 months free</span></button>
     </div>
   </header>
 
@@ -144,7 +144,7 @@
   </section>
 
   <footer>
-    <b>Business broker?</b> Our broker plan is free for up to 15 listings. <a href="/brokers">Apply here</a><br><br>
+    <b>Business broker?</b> Our broker plan is free for up to 15 listings, and Broker Pro covers 50 Featured listings for $99/month. <a href="/brokers#pro">See broker plans</a><br><br>
     Questions? <a href="mailto:mynextownerofficial@gmail.com">mynextownerofficial@gmail.com</a>
     · <a href="/account">Manage your plan</a>
   </footer>
@@ -161,6 +161,7 @@
       });
     }
     btns.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.period)})});
+    set('yearly');
   })();
 </script>
 <script src="/auth.js"></script>

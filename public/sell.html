@@ -51,6 +51,8 @@
   .drivebtn:disabled{opacity:.6;cursor:default}
   .inc{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--good);margin-top:2px}
   .inc:empty{display:none}
+  .pwbill{margin:10px 0 0;font-size:13px;color:var(--muted);text-align:center}
+  .pwbill button{border:0;background:none;padding:0;color:var(--accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline}
   .pwskip{display:block;width:100%;margin-top:10px;padding:10px;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
   .idbox{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
   .idbox .btn{width:auto;margin:0;padding:11px 18px}
@@ -160,9 +162,9 @@
 (function(){
   var STATES="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
   var PLANS={
-    starter:{name:"Starter",price:"$29/mo",link:"https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00",perks:"Video tour · ✓ Verified badge · up to 10 photos"},
-    featured:{name:"Featured",price:"$59/mo",link:"https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02",perks:"Featured placement + tag · up to 15 photos · everything in Starter"},
-    premium:{name:"Premium",price:"$119/mo",link:"https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04",perks:"Top placement · social promotion · up to 25 photos · everything in Featured"}
+    starter:{name:"Starter",price:"$29/mo",yprice:"$290/yr",link:"https://buy.stripe.com/6oU3cu3SOg3Th0b9bh3sI00",ylink:"https://buy.stripe.com/7sY7sKahcg3T25h1IP3sI01",perks:"Video tour · ✓ Verified badge · up to 10 photos"},
+    featured:{name:"Featured",price:"$59/mo",yprice:"$590/yr",link:"https://buy.stripe.com/14A3cu9d85pfdNZ3QX3sI02",ylink:"https://buy.stripe.com/eVq7sK7503h7fW7afl3sI03",perks:"Featured placement + tag · up to 15 photos · everything in Starter"},
+    premium:{name:"Premium",price:"$119/mo",yprice:"$1,190/yr",link:"https://buy.stripe.com/6oUeVc4WSaJzdNZ0EL3sI04",ylink:"https://buy.stripe.com/8x28wOexsg3TfW71IP3sI05",perks:"Top placement · social promotion · up to 25 photos · everything in Featured"}
   };
   var ORDER=["starter","featured","premium"], RANK={free:0,starter:1,featured:2,premium:3};
   var LIMIT={free:5,starter:10,featured:15,premium:25};
@@ -190,8 +192,12 @@
   // ---------- Paywall: appears only when someone uses a paid feature ----------
   var onCancel=null;
   function closePw(cancelled){$('pwRoot').innerHTML=''; if(cancelled&&onCancel)onCancel(); onCancel=null;}
-  function checkoutUrl(t){var u=new URL(PLANS[t].link);u.searchParams.set('prefilled_email',email);return u.toString()}
+  // Paywalls open on yearly billing (2 months free); sellers can switch to monthly.
+  var period='yearly';
+  function priceOf(t){return period==='yearly'?PLANS[t].yprice:PLANS[t].price}
+  function checkoutUrl(t){var u=new URL(period==='yearly'?PLANS[t].ylink:PLANS[t].link);u.searchParams.set('prefilled_email',email);return u.toString()}
   function paywall(reason,need,title,text,cancel){
+    var args=arguments;
     onCancel=cancel||null;
     var paid=me&&me.bestTier&&!me.admin, upgrade=paid&&reason!=='publish';
     var h='<div class="pwshade" id="pwShade"></div><div class="pw" role="dialog" aria-modal="true"><button type="button" class="x" id="pwX" aria-label="Close">×</button>'+
@@ -200,11 +206,12 @@
       h+='<button type="button" class="pwplan rec" data-upgrade="1"><div><b>Upgrade to '+PLANS[need].name+'</b><small>'+PLANS[need].perks+'</small></div><span class="p">'+PLANS[need].price+'</span></button>';
     } else {
       ORDER.forEach(function(t){ if(RANK[t]<RANK[need])return;
-        h+='<button type="button" class="pwplan'+(t===need?' rec':'')+'" data-tier="'+t+'"><div><b>'+PLANS[t].name+'</b><small>'+PLANS[t].perks+'</small></div><span class="p">'+PLANS[t].price+'</span></button>';
+        h+='<button type="button" class="pwplan'+(t===need?' rec':'')+'" data-tier="'+t+'"><div><b>'+PLANS[t].name+'</b><small>'+PLANS[t].perks+'</small></div><span class="p">'+priceOf(t)+'</span></button>';
       });
     }
-    h+='</div><button type="button" class="pwskip" id="pwSkip">'+(reason==='publish'?'Not now':'No thanks, keep my listing free')+'</button></div>';
+    h+='</div>'+(upgrade?'':'<p class="pwbill">'+(period==='yearly'?'Billed yearly: 2 months free. <button type="button" id="pwPer">Pay monthly instead</button>':'Billed monthly. <button type="button" id="pwPer">Pay yearly and get 2 months free</button>')+'</p>')+'<button type="button" class="pwskip" id="pwSkip">'+(reason==='publish'?'Not now':'No thanks, keep my listing free')+'</button></div>';
     $('pwRoot').innerHTML=h;
+    var per=$('pwPer'); if(per) per.onclick=function(){ period=period==='yearly'?'monthly':'yearly'; paywall.apply(null,args); };
     $('pwX').onclick=function(){closePw(true)}; $('pwShade').onclick=function(){closePw(true)}; $('pwSkip').onclick=function(){closePw(true)};
     $('pwRoot').querySelectorAll('[data-tier]').forEach(function(b){b.onclick=function(){
       b.disabled=true; b.querySelector('small').textContent='Saving your listing…';

@@ -1,6 +1,7 @@
 // Listings storage and rules for NextOwner.
 // Listings are JSON objects in the "listings" blob store (one key per listing);
 // photos are images in the "listing-photos" store, keyed "<owner-hash>/<uuid>.<ext>".
+import { removeStats } from "./stats.mjs";
 import { getStore } from "@netlify/blobs";
 import { createHash, randomUUID } from "node:crypto";
 import { customersFor, plansFor } from "./shared.mjs";
@@ -64,6 +65,7 @@ export const saveListing = (l) => listingsStore().setJSON(l.id, l);
 export async function removeListing(l) {
   await listingsStore().delete(l.id);
   await Promise.all((l.photos || []).map((k) => photosStore().delete(k).catch(() => {})));
+  await removeStats(l.id);
 }
 
 export const isPublic = (l) => l.status === "live" && l.active === true;
@@ -187,16 +189,20 @@ export async function geocodeZip(zip) {
 // the owner adds a plan.
 export async function syncOwner(email, plans, listings) {
   if (!plans) plans = await plansFor(await customersFor(email));
-  const seller = plans.filter((p) => p.side === "seller").sort((a, b) => RANK[b.tier] - RANK[a.tier]);
+  const tierOf = (p) => p.listingTier || p.tier;
+  const seller = plans.filter((p) => p.side === "seller").sort((a, b) => RANK[tierOf(b)] - RANK[tierOf(a)]);
   const profile = await getSeller(email);
-  const broker = brokerActive(profile), credit = brokerCredit(profile);
+  const brokerPro = seller.some((p) => p.tier === "broker_pro");
+  // Broker Pro replaces the free broker plan.
+  const broker = brokerActive(profile) && !brokerPro, credit = brokerCredit(profile);
   const all = listings || (await allListings());
   const mine = all.filter((l) => l.owner === email)
     .sort((a, b) => (a.status === "draft") - (b.status === "draft") || a.createdAt - b.createdAt);
   const used = mine.filter((l) => l.status !== "draft").length;
   // Listing slots: each paid seller plan first (so upgrades apply), then the broker's free slots.
-  const slotTiers = seller.map((p) => p.tier).concat(broker ? Array(BROKER_LISTINGS).fill(BROKER_TIER) : []);
-  let bestTier = seller[0] ? seller[0].tier : null;
+  const slotTiers = seller.flatMap((p) => Array(p.listings || 1).fill(tierOf(p)))
+    .concat(broker ? Array(BROKER_LISTINGS).fill(BROKER_TIER) : []);
+  let bestTier = seller[0] ? tierOf(seller[0]) : null;
   if (broker && (RANK[BROKER_TIER] > (RANK[bestTier] || 0))) bestTier = BROKER_TIER;
   // Keep each listing's "Listed by" credit in step with the owner's broker profile.
   for (const l of mine) {
@@ -210,8 +216,8 @@ export async function syncOwner(email, plans, listings) {
     }
     return { mine, slots: Infinity, plans, used, bestTier: "premium", admin: true };
   }
-  // Brokers' free plan replaces the one free listing everyone else gets.
-  const freeSlots = broker ? 0 : FREE_SLOTS;
+  // Brokers' plans replace the one free listing everyone else gets.
+  const freeSlots = broker || brokerPro ? 0 : FREE_SLOTS;
   for (let i = 0; i < mine.length; i++) {
     const l = mine[i];
     const slot = slotTiers[i];
@@ -225,7 +231,8 @@ export async function syncOwner(email, plans, listings) {
     }
   }
   return { mine, slots: slotTiers.length + freeSlots, paidSlots: seller.length, plans, used, bestTier, admin: false,
-    broker: broker ? { listings: BROKER_LISTINGS, tier: BROKER_TIER } : null };
+    broker: broker ? { listings: BROKER_LISTINGS, tier: BROKER_TIER } : null,
+    brokerPro: brokerPro ? { listings: slotTiers.length } : null };
 }
 
 // ---------- Sellers (ID verification) ----------
