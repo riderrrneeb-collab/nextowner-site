@@ -53,6 +53,7 @@
   .cbox{margin-top:12px;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:15px;line-height:1.6}
   .cbox a{color:var(--accent)}
   .msgbig{text-align:center;padding:60px 20px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:40;padding:12px 18px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;box-shadow:var(--shadow)}
 </style>
 </head>
 <body>
@@ -127,6 +128,10 @@
        '<div class="cbox" id="cbox" hidden></div></section>'+
        '<section class="box"><h2>Selling a business?</h2><p class="sub" style="margin:0 0 4px">List yours free and reach buyers near you.</p><a class="btn sec" href="/sell">List your business</a></section></aside></div>';
     page.innerHTML=h;
+    if(new URLSearchParams(location.search).get('published')){
+      var t=document.createElement('div'); t.className='toast'; t.textContent='Your listing is live.'; document.body.appendChild(t);
+      setTimeout(function(){t.remove()},4000); try{history.replaceState(null,'',location.pathname)}catch(e){}
+    }
 
     var th=document.getElementById('thumbs');
     if(th) th.addEventListener('click',function(e){

@@ -372,7 +372,7 @@
     var req=editing?NO.api('/api/listings/'+editing.id,{method:'PUT',body:body(true)}):NO.api('/api/listings',{method:'POST',body:body(true)});
     req.then(function(d){
       $('publish').disabled=false; remember(d);
-      if(d.status==='live'){ store(AFTER); location.href='/?listing='+d.id+'&published=1'; return; }
+      if(d.status==='live'){ store(AFTER); location.href='/listing/'+d.id+'?published=1'; return; }
       say('Saved as a draft.');
       paywall('publish','starter','List another business','Your free listing is already in use. Each plan adds another live listing.');
     }).catch(function(err){ $('publish').disabled=false; say(err.message,'err'); });
@@ -415,7 +415,7 @@
           if(after&&after.publish&&l&&l.status==='draft'&&d.canPublish){
             banner.textContent='Payment received. Publishing your listing…';
             return NO.api('/api/listings/'+l.id,{method:'PUT',body:Object.assign({},l,{publish:true,photos:l.photoKeys})}).then(function(r){
-              if(r.status==='live') location.href='/?listing='+l.id+'&published=1'; else show();
+              if(r.status==='live') location.href='/listing/'+l.id+'?published=1'; else show();
             });
           }
         }

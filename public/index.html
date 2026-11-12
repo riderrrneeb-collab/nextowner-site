@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/nomap.css">
 <title>NextOwner · Businesses for sale near you</title>
 <meta name="description" content="Browse small businesses for sale near you. List yours free, with no commission.">
+<script>(function(){var q=new URLSearchParams(location.search),id=q.get('listing');if(id&&id!=='none')location.replace('/listing/'+encodeURIComponent(id)+(q.get('published')?'?published=1':''));})();</script>
 <style>
   :root{
     --bg:#f3f6fb; --ink:#0f172a; --muted:#5b6474; --glass:rgba(255,255,255,.6);
@@ -102,7 +103,7 @@
   .chip.on{background:var(--accent);color:#fff;border-color:transparent}
 
   .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
-  .mapband{position:relative;height:380px;border-radius:24px;overflow:hidden;border:1px solid var(--edge);box-shadow:var(--shadow);margin:0 0 18px}
+  .mapband{position:relative;height:440px;border-radius:24px;overflow:hidden;border:1px solid var(--edge);box-shadow:var(--shadow);margin:0 0 18px}
   .mapband .nomap{position:absolute;inset:0}
   .mapx{position:absolute;z-index:500;right:12px;top:12px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;
     background:rgba(15,23,42,.72);color:#fff;font-weight:600;font-size:13px;text-decoration:none;border:1px solid rgba(255,255,255,.25);
@@ -480,8 +481,8 @@
       c.innerHTML='<div class="img" style="background:'+photo(x,800,400)+'"><span class="badge">'+esc(x.cat)+'</span>'+corner+(x.example||x.video?'<span class="vid"></span>':'')+'</div>'+
         '<div class="body"><h3>'+esc(x.n)+(x.v?'<span class="ver">✓ Verified</span>':'')+'</h3><div class="loc">'+esc(x.loc)+'</div>'+
         '<div class="nums"><div>Asking<b>'+money(x.ask)+'</b></div><div>Revenue<b>'+money(x.rev)+'</b></div><div>Cash flow<b>'+money(x.cf)+'</b></div></div></div>';
-      c.addEventListener('click',function(){openDetail(i)});
-      c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(i)}});
+      c.addEventListener('click',function(e){go(i,e)});
+      c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(i,e)}});
       c.addEventListener('mouseenter',function(){hl(i,true)}); c.addEventListener('mouseleave',function(){hl(i,false)});
       g.appendChild(c); x.card=c;
     });
@@ -539,6 +540,11 @@
 
   // Listing detail
   var cur=-1, cbox=document.getElementById('dCbox');
+  // A listing card opens that listing's own page (Ctrl/Cmd-click opens it in a new tab).
+  function go(i,e){
+    var x=L[i]; if(!x) return; var url=NOL.pageUrl(x);
+    if(e&&(e.metaKey||e.ctrlKey)) window.open(url,'_blank','noopener'); else location.href=url;
+  }
   function openDetail(i){
     var x=L[i]; if(!x)return; cur=i;
     var hero=document.getElementById('dHero');
@@ -715,7 +721,7 @@
     var r=document.getElementById('pResults'); r.innerHTML=html;
     r.querySelectorAll('.pick').forEach(function(el){
       if(el.closest('.blurred'))return;
-      el.addEventListener('click',function(){closePicks();openDetail(+el.dataset.i)});
+      el.addEventListener('click',function(e){go(+el.dataset.i,e)});
     });
     r.scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -748,7 +754,7 @@
     if(loaded)return; loaded=true; build();
     if(wantId){
       var i=-1; L.forEach(function(x,k){if(x.id===wantId)i=k});
-      if(i>=0){ openDetail(i); }
+      if(i>=0){ go(i); }
     }
     if(qs.get('published')){
       var t=document.createElement('div'); t.className='toast'; t.textContent='Your listing is live.';

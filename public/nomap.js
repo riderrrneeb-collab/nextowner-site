@@ -7,7 +7,7 @@
     opts=opts||{};
     var mobile=L.Browser.mobile;
     var map=L.map(el,{
-      zoomControl:false, attributionControl:true, worldCopyJump:true, minZoom:3, maxZoom:19,
+      zoomControl:false, attributionControl:true, worldCopyJump:true, minZoom:3, maxZoom:19, zoomSnap:0.25,
       scrollWheelZoom:!!opts.wheel, dragging:!(mobile&&opts.dragOnMobile===false), touchZoom:!(mobile&&opts.dragOnMobile===false)
     });
     L.control.zoom({position:opts.zoomPosition||'bottomright'}).addTo(map);
@@ -18,7 +18,7 @@
     // Roads and place names on top of the imagery, so it reads like a hybrid map.
     L.tileLayer(base+'Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,opacity:.7}).addTo(map);
     L.tileLayer(base+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18}).addTo(map);
-    map.fitBounds(US);
+    map.fitBounds(US,{paddingTopLeft:[10,30],paddingBottomRight:[10,4]});
     // On an embedded map, the mouse wheel zooms only after someone clicks into the map,
     // so scrolling the page past it doesn't get stuck.
     if(opts.wheelOnFocus){
@@ -53,9 +53,9 @@
   // Fits the map to the shown markers, or to the US when there are none.
   function fit(map, ms, opts){
     var pts=ms.filter(function(m){return m&&map.hasLayer(m)}).map(function(m){return m.getLatLng()});
-    if(!pts.length){ map.fitBounds(US,opts); return; }
+    if(!pts.length){ map.fitBounds(US,Object.assign({paddingTopLeft:[10,30],paddingBottomRight:[10,4]},opts||{})); return; }
     if(pts.length===1){ map.setView(pts[0],10,opts); return; }
-    map.fitBounds(L.latLngBounds(pts),Object.assign({maxZoom:11,padding:[50,50]},opts||{}));
+    map.fitBounds(L.latLngBounds(pts),Object.assign({maxZoom:11,paddingTopLeft:[36,44],paddingBottomRight:[36,14]},opts||{}));
   }
 
   window.NOMap={create:create,markers:markers,show:show,highlight:highlight,fit:fit,US:US};
