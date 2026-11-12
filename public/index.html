@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/logo-120.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/nomap.css">
 <title>NextOwner · Businesses for sale near you</title>
 <meta name="description" content="Browse small businesses for sale near you. List yours free, with no commission.">
 <style>
@@ -97,8 +99,17 @@
   .sheet .x{background:rgba(255,255,255,.85);color:#0f172a;z-index:2}
   .chip.on{background:var(--accent);color:#fff;border-color:transparent}
 
-  .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:1fr 380px;gap:18px}
-  @media (max-width:960px){.main{grid-template-columns:1fr}.map{order:-1;height:220px!important;position:relative!important;top:0!important}}
+  .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
+  .mapband{position:relative;height:380px;border-radius:24px;overflow:hidden;border:1px solid var(--edge);box-shadow:var(--shadow);margin:0 0 18px}
+  .mapband .nomap{position:absolute;inset:0}
+  .mapx{position:absolute;z-index:500;right:12px;top:12px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;
+    background:rgba(15,23,42,.72);color:#fff;font-weight:600;font-size:13px;text-decoration:none;border:1px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .mapx:hover{background:#0a84ff}
+  .maptap{display:none;position:absolute;inset:0;z-index:450;align-items:flex-end;justify-content:center;padding-bottom:14px;text-decoration:none}
+  .maptap span{padding:8px 14px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-weight:600;font-size:13px}
+  @media (max-width:640px){.mapband{height:260px;border-radius:20px}.mapx{display:none}}
+  @media (pointer:coarse){.maptap{display:flex}}
   .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
   .head h2{margin:0;font-size:22px;letter-spacing:-.02em}
   .ex{font-size:12px;color:var(--muted);padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
@@ -316,9 +327,13 @@
   <div class="main">
     <section>
       <div class="head"><h2>Businesses for sale <span class="count" id="count"></span></h2><span class="ex" id="exLabel" hidden>Example listings</span></div>
+      <div class="mapband">
+        <div class="nomap" id="map" aria-label="Map of listings"></div>
+        <a class="mapx" id="mapx" href="/map">⤢ Expand map</a>
+        <a class="maptap" id="maptap" href="/map"><span>Tap to explore the map</span></a>
+      </div>
       <div class="grid" id="grid"></div>
     </section>
-    <aside class="map" id="map"></aside>
   </div>
   <p class="credit">Example listings for preview only. Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</p>
 </div>
@@ -431,67 +446,27 @@
 
 <script src="/categories.js"></script>
 <script src="/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/nomap.js"></script>
+<script src="/listings-data.js"></script>
 <script>
 (function(){
-  // Example listings for the preview (not real businesses).
-  var EXAMPLES=[
-    {n:"Taco Food Truck",loc:"Denver, CO",lat:39.74,lng:-104.99,ask:140,rev:142,cf:51,cat:"Food & drink",g:["#ffb36b","#ff6b8b"],ph:"photo-1519861155730-0b5fbf0dd889",v:true,
-     d:"Fully equipped truck with a loyal lunch crowd and two recurring brewery spots. Owner works 4 days a week; recipes, permits and social accounts transfer with the sale."},
-    {n:"Boutique Yoga Studio",loc:"Austin, TX",lat:30.27,lng:-97.74,ask:175,rev:188,cf:62,cat:"Fitness",g:["#8ec5ff","#b49cff"],ph:"photo-1761971975962-9cc397e2ba2a",v:true,
-     d:"Bright 1,800 sq ft studio with about 220 active members and six contract instructors. Lease has four years remaining."},
-    {n:"Residential Lawn Care Route",loc:"Charlotte, NC",lat:35.23,lng:-80.84,ask:125,rev:121,cf:47,cat:"Routes",g:["#9be7a8","#3fb8a3"],ph:"photo-1458245201577-fc8a130b8829",v:false,
-     d:"Around 140 recurring residential accounts in tight neighborhoods. Sale includes truck, trailer, two commercial mowers and scheduling software."},
-    {n:"Neighborhood Coffee Bar",loc:"Portland, OR",lat:45.52,lng:-122.68,ask:235,rev:310,cf:78,cat:"Food & drink",g:["#d9a77a","#8a5a3b"],ph:"photo-1567880905822-56f8e06fe630",v:true,
-     d:"Corner cafe with strong morning traffic and a wholesale pastry partner. Trained staff of five stays on through the transition."},
-    {n:"24/7 Strength Gym",loc:"Phoenix, AZ",lat:33.45,lng:-112.07,ask:340,rev:420,cf:112,cat:"Fitness",g:["#7f8cff","#3a3f9e"],ph:"photo-1623874106686-5be2b325c8f1",v:false,
-     d:"Key-fob access gym with squat racks, platforms and a turf lane. Membership billing is automated; light owner involvement."},
-    {n:"Coin Laundromat",loc:"Columbus, OH",lat:39.96,lng:-83.0,ask:240,rev:205,cf:69,cat:"Services",g:["#a0e9ff","#5aa9e6"],ph:"photo-1757233285714-4de702bb8a56",v:true,
-     d:"Thirty washers and dryers, recently upgraded to card readers. Wash-and-fold pickup adds a growing second revenue stream."},
-    {n:"Mobile Dog Grooming Van",loc:"Tampa, FL",lat:27.95,lng:-82.46,ask:95,rev:98,cf:39,cat:"Services",g:["#ffd56b","#ff9f6b"],ph:"photo-1597603413826-cd1c06b05222",v:false,
-     d:"Self-contained grooming van with a booked-out schedule and repeat clients every 4 to 6 weeks. Booking app and client list included."},
-    {n:"Snack Vending Route",loc:"Seattle, WA",lat:47.61,lng:-122.33,ask:75,rev:76,cf:29,cat:"Routes",g:["#c3f0ca","#6fcf97"],ph:"photo-1681632973141-6aaa0a2dd9f2",v:true,
-     d:"Eighteen machines in offices and gyms, serviced one day a week. Machines are owned outright with cashless readers installed."}
-  ];
-  EXAMPLES.forEach(function(x){x.example=true});
-  var MIN_SHOWN=6; // pad with examples until there are this many real listings
+  var EXAMPLES=NOL.EXAMPLES, MIN_SHOWN=NOL.MIN_SHOWN, gradFor=NOL.gradFor, esc=NOL.esc, money=NOL.money, safeImg=NOL.safeImg, photo=NOL.photo, fromApi=NOL.fromApi;
   var CATS=(window.NO_CATEGORIES||[]).map(function(c){return c[0]});
   ['catSel','pCat'].forEach(function(id){ var el=document.getElementById(id); if(!el)return;
     CATS.forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; el.appendChild(o); }); });
-  var PALETTE=[["#ffb36b","#ff6b8b"],["#8ec5ff","#b49cff"],["#a0e9ff","#5aa9e6"],["#f9a8d4","#c084fc"],["#9be7a8","#3fb8a3"],["#ffd56b","#ff9f6b"],["#7f8cff","#3a3f9e"],["#d9a77a","#8a5a3b"]];
-  function gradFor(c){ if(GRAD[c])return GRAD[c]; var h=0; for(var i=0;i<c.length;i++)h=(h*31+c.charCodeAt(i))>>>0; return PALETTE[h%PALETTE.length]; }
-  var GRAD={"Food & drink":["#ffb36b","#ff6b8b"],"Fitness":["#8ec5ff","#b49cff"],"Services":["#a0e9ff","#5aa9e6"],"Retail":["#f9a8d4","#c084fc"],"Routes":["#9be7a8","#3fb8a3"],"Other":["#cbd5e1","#94a3b8"]};
   var REAL=[], L=[];
 
-  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  function money(k){k=Math.round(k*10)/10;return k>=1000?('$'+(k/1000).toFixed(1).replace('.0','')+'M'):('$'+(k>=100?Math.round(k):k)+'K')}
-  function safeImg(u){return /^\/api\/photos\/[a-f0-9]{16}\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(u||'')?u:''}
-  function photo(x,w,h){
-    var grad='linear-gradient(135deg,'+x.g[0]+','+x.g[1]+')';
-    if(x.img) return 'url('+x.img+'), '+grad;
-    if(x.ph) return 'url(https://images.unsplash.com/'+x.ph+'?auto=format&fit=crop&w='+w+'&h='+h+'&q=70), '+grad;
-    return grad;
-  }
-  function fromApi(l){
-    var photos=(l.photos||[]).map(safeImg).filter(Boolean);
-    return {id:l.id,n:l.name,loc:l.city+', '+l.state,lat:l.lat,lng:l.lng,ask:l.ask/1000,rev:l.revenue/1000,cf:l.cashFlow/1000,
-      cat:(l.category==='Other'&&l.categoryOther)?l.categoryOther:l.category,catKey:l.category,g:gradFor(l.category),img:photos[0]||'',photos:photos,v:!!l.verified,d:l.description,
-      tier:l.tier,video:/^https:\/\/\S+$/i.test(l.video||'')?l.video:'',year:l.yearEstablished,emp:l.employees,reason:l.reason};
-  }
-  // Rough US map projection for the pins (continental US box).
-  function pinPos(x){
-    if(x.lat==null||x.lng==null) return null;
-    var left=(x.lng+125)/(-66+125)*100, top=(49.5-x.lat)/(49.5-24.5)*100;
-    return [Math.max(4,Math.min(96,left)),Math.max(5,Math.min(95,top))];
-  }
-
-  var g=document.getElementById('grid'), m=document.getElementById('map'), count=document.getElementById('count');
+  var g=document.getElementById('grid'), count=document.getElementById('count');
+  var map=null, marks=[];
+  try{ map=NOMap.create(document.getElementById('map'),{wheelOnFocus:true,dragOnMobile:false,zoomPosition:'bottomright'}); }catch(e){}
   var empty=document.createElement('div'); empty.className='empty'; empty.textContent='No listings match. Try another filter or search.';
   var loading=document.createElement('div'); loading.className='loading'; loading.textContent='Loading listings…';
   g.appendChild(loading);
 
   function build(){
     L=REAL.concat(REAL.length<MIN_SHOWN?EXAMPLES:[]);
-    g.innerHTML=''; m.innerHTML='';
+    g.innerHTML=''; marks.forEach(function(mk){ if(mk&&map) map.removeLayer(mk); });
     var lc=document.createElement('a'); lc.className='card listcard'; lc.href='/sell';
     lc.innerHTML='<div class="lcin"><div class="lcplus">＋</div><h3>List your business</h3><p>It\'s free. Add photos, your numbers and contact details, and go live in minutes.</p><span class="lcbtn">Start your listing</span></div>';
     g.appendChild(lc);
@@ -505,17 +480,13 @@
       c.addEventListener('click',function(){openDetail(i)});
       c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(i)}});
       c.addEventListener('mouseenter',function(){hl(i,true)}); c.addEventListener('mouseleave',function(){hl(i,false)});
-      g.appendChild(c); x.card=c; x.pin=null;
-      var pos=pinPos(x);
-      if(pos){
-        var p=document.createElement('button'); p.type='button'; p.className='pin'; p.textContent=money(x.ask);
-        p.setAttribute('aria-label',x.n+', asking '+money(x.ask));
-        p.style.left=pos[0]+'%'; p.style.top=pos[1]+'%';
-        p.addEventListener('click',function(){ x.card.scrollIntoView({behavior:'smooth',block:'center'}); openDetail(i); });
-        p.addEventListener('mouseenter',function(){hl(i,true)}); p.addEventListener('mouseleave',function(){hl(i,false)});
-        m.appendChild(p); x.pin=p;
-      }
+      g.appendChild(c); x.card=c;
     });
+    marks=map?NOMap.markers(map,L.map(function(x){return {lat:x.lat,lng:x.lng,label:money(x.ask),title:x.n+', asking '+money(x.ask)}}),{
+      click:function(i){ openDetail(i); },
+      hover:function(i,on){ hl(i,on); }
+    }):[];
+    L.forEach(function(x,i){ x.pin=marks[i]||null; });
     g.appendChild(empty);
     var ex=document.getElementById('exLabel');
     ex.hidden=REAL.length>=MIN_SHOWN;
@@ -523,10 +494,16 @@
     apply();
   }
 
-  function hl(i,on){var x=L[i]; if(!x)return; x.card.classList.toggle('hl',on); if(x.pin)x.pin.classList.toggle('hl',on)}
+  function hl(i,on){var x=L[i]; if(!x)return; x.card.classList.toggle('hl',on); if(x.pin)NOMap.highlight(x.pin,on)}
 
   // Filters and search
-  var filter='all', q=document.getElementById('q');
+  var filter='all', q=document.getElementById('q'), fitT=0;
+  // "Expand map" opens /map with the same search and filter.
+  function syncMapLink(){
+    var p=new URLSearchParams(); if(q.value.trim()) p.set('q',q.value.trim());
+    if(filter.indexOf('cat:')===0) p.set('cat',filter.slice(4)); else if(filter!=='all') p.set('f',filter);
+    var u='/map'+(p.toString()?'?'+p:''); document.getElementById('mapx').href=u; document.getElementById('maptap').href=u;
+  }
   function apply(){
     var t=q.value.trim().toLowerCase(), n=0;
     L.forEach(function(x){
@@ -535,8 +512,10 @@
       else if(filter==='under100') ok=x.ask<100;
       else if(filter==='verified') ok=x.v;
       if(ok&&t) ok=(x.n+' '+x.loc+' '+x.cat).toLowerCase().indexOf(t)>-1;
-      x.card.style.display=ok?'':'none'; if(x.pin) x.pin.style.display=ok?'':'none'; if(ok)n++;
+      x.card.style.display=ok?'':'none'; if(x.pin&&map) NOMap.show(map,x.pin,ok); if(ok)n++;
     });
+    if(map){ clearTimeout(fitT); fitT=setTimeout(function(){ NOMap.fit(map,marks,{animate:true}); },250); }
+    syncMapLink();
     empty.style.display=n?'none':'';
     count.textContent='· '+n+(n===1?' result':' results');
   }

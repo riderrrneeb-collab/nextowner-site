@@ -1,0 +1,27 @@
+/* NextOwner map pins and popups (used with Leaflet). */
+.nomap{position:relative;isolation:isolate;z-index:0;background:#0b1a24}
+.nomap .leaflet-container,.nomap.leaflet-container{background:#0b1a24;font:inherit}
+.nopin-wrap{background:none;border:0}
+.nopin{position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 6px));display:block;padding:5px 10px;border-radius:999px;
+  background:#0f172a;color:#fff;font:600 12px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.9);cursor:pointer;transition:transform .15s ease,background .15s ease}
+.nopin::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:7px solid #0f172a}
+.nopin-wrap:hover .nopin,.nopin-wrap.hl .nopin{background:#0a84ff;transform:translate(-50%,calc(-100% - 6px)) scale(1.1)}
+.nopin-wrap:hover .nopin::after,.nopin-wrap.hl .nopin::after{border-top-color:#0a84ff}
+.nopin-wrap:focus{outline:none}.nopin-wrap:focus-visible .nopin{outline:2px solid #fff;outline-offset:2px}
+/* Popup card */
+.nopop .leaflet-popup-content-wrapper{padding:0;border-radius:18px;overflow:hidden;background:#fff;color:#0f172a;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.nopop .leaflet-popup-content{margin:0;width:260px!important;font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+.nopop .leaflet-popup-tip{background:#fff}
+.nopop a.leaflet-popup-close-button{color:#fff;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(15,23,42,.55);font-size:18px;line-height:24px}
+.popimg{height:120px;background-size:cover;background-position:center;position:relative}
+.popimg span{position:absolute;left:10px;top:10px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.9)}
+.popbody{padding:12px 14px 14px}
+.popbody b{display:block;font-size:15px;letter-spacing:-.01em}
+.popbody .pl{color:#5b6474;font-size:12.5px;margin:2px 0 8px}
+.popnums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px;color:#5b6474;margin-bottom:10px}
+.popnums em{display:block;font-style:normal;font-weight:700;font-size:14px;color:#0f172a}
+.popgo{display:block;text-align:center;padding:9px;border-radius:999px;background:#0a84ff;color:#fff!important;font-weight:600;text-decoration:none}
+.popver{color:#16a34a;font-size:11px;font-weight:600;margin-left:4px}
+.leaflet-control-attribution{font-size:10px}
