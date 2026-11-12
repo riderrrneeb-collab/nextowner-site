@@ -55,7 +55,7 @@
     var pts=ms.filter(function(m){return m&&map.hasLayer(m)}).map(function(m){return m.getLatLng()});
     if(!pts.length){ map.fitBounds(US,opts); return; }
     if(pts.length===1){ map.setView(pts[0],10,opts); return; }
-    map.fitBounds(L.latLngBounds(pts).pad(0.15),Object.assign({maxZoom:11},opts||{}));
+    map.fitBounds(L.latLngBounds(pts),Object.assign({maxZoom:11,padding:[50,50]},opts||{}));
   }
 
   window.NOMap={create:create,markers:markers,show:show,highlight:highlight,fit:fit,US:US};

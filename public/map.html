@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="/nomap.css">
 <style>
-  :root{--accent:#0a84ff;--glass:rgba(15,23,42,.72);--edge:rgba(255,255,255,.18)}
+  :root{--accent:#0a84ff;--mglass:rgba(15,23,42,.72);--medge:rgba(255,255,255,.18)}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:#0b1a24}
   body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
@@ -18,7 +18,7 @@
   .legalfoot{display:none}
   .bar{position:fixed;z-index:600;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:8px;pointer-events:none}
   .row1,.row2{display:flex;gap:8px;align-items:center;pointer-events:auto}
-  .glass{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  .glass{background:var(--mglass);border:1px solid var(--medge);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
     box-shadow:0 8px 30px rgba(0,0,0,.35)}
   .back{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;color:#fff;text-decoration:none;font-weight:700;font-size:15px;white-space:nowrap}
   .back img{width:22px;height:22px;border-radius:6px}
@@ -34,7 +34,10 @@
     background-image:linear-gradient(45deg,transparent 50%,#fff 50%),linear-gradient(135deg,#fff 50%,transparent 50%);
     background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
   select.chip option{color:#0f172a}
-  .fitbtn{position:fixed;z-index:600;right:12px;bottom:calc(110px + env(safe-area-inset-bottom));width:34px;height:34px;border-radius:8px;
+  /* Zoom buttons sit top-right under the search bar, clear of the hosting badge at the bottom. */
+  .leaflet-top.leaflet-right{margin-top:calc(108px + env(safe-area-inset-top))}
+  .leaflet-control-zoom a{background:rgba(15,23,42,.8)!important;color:#fff!important;border-color:rgba(255,255,255,.2)!important}
+  .fitbtn{position:fixed;z-index:600;right:10px;top:calc(196px + env(safe-area-inset-top));width:34px;height:34px;border-radius:8px;
     display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;cursor:pointer;padding:0}
   .leaflet-bottom.leaflet-right{margin-bottom:env(safe-area-inset-bottom)}
   .note{position:fixed;z-index:600;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 16px;border-radius:999px;
@@ -70,7 +73,7 @@
 <script>
 (function(){
   var esc=NOL.esc, money=NOL.money, photo=NOL.photo;
-  var map=NOMap.create(document.getElementById('map'),{wheel:true,zoomPosition:'bottomright'});
+  var map=NOMap.create(document.getElementById('map'),{wheel:true,zoomPosition:'topright'});
   var items=[], marks=[], filter='all';
   var q=document.getElementById('q'), catSel=document.getElementById('catSel'), countEl=document.getElementById('count'), note=document.getElementById('note');
   (window.NO_CATEGORIES||[]).forEach(function(c){ var o=document.createElement('option'); o.value=c[0]; o.textContent=c[0]; catSel.appendChild(o); });
