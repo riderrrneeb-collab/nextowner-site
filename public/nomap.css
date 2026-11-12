@@ -25,3 +25,7 @@
 .popgo{display:block;text-align:center;padding:9px;border-radius:999px;background:#0a84ff;color:#fff!important;font-weight:600;text-decoration:none}
 .popver{color:#16a34a;font-size:11px;font-weight:600;margin-left:4px}
 .leaflet-control-attribution{font-size:10px}
+/* State hover label */
+.nostate{background:rgba(15,23,42,.85);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:6px 10px;font:13px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.nostate::before{display:none}
+.nomap .leaflet-interactive:focus{outline:none}

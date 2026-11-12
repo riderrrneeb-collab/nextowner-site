@@ -58,5 +58,31 @@
     map.fitBounds(L.latLngBounds(pts),Object.assign({maxZoom:11,paddingTopLeft:[36,44],paddingBottomRight:[36,14]},opts||{}));
   }
 
-  window.NOMap={create:create,markers:markers,show:show,highlight:highlight,fit:fit,US:US};
+  // State outlines: hovering lightly highlights a state, clicking zooms to it.
+  // opts.count(abbr) -> number of listings shown in that state (for the label).
+  var statesData=null;
+  function states(map, opts){
+    opts=opts||{};
+    var hoverable=window.matchMedia&&matchMedia('(hover: hover)').matches;
+    var base={stroke:true,color:'#ffffff',weight:0.8,opacity:0.35,fill:true,fillColor:'#ffffff',fillOpacity:0};
+    var hot={weight:2,opacity:0.9,fillOpacity:0.16};
+    function label(f){
+      var n=opts.count?opts.count(f.properties.abbr):null;
+      return '<b>'+f.properties.name+'</b>'+(n==null?'':'<br>'+(n?n+(n===1?' business':' businesses')+' for sale':'No listings yet'));
+    }
+    (statesData||(statesData=fetch('/us-states.json').then(function(r){return r.json()}))).then(function(geo){
+      var layer=L.geoJSON(geo,{style:function(){return base},onEachFeature:function(f,l){
+        if(hoverable) l.bindTooltip(function(){return label(f)},{sticky:true,direction:'top',offset:[0,-12],className:'nostate'});
+        l.on('mouseover',function(){ l.setStyle(hot); });
+        l.on('mouseout',function(){ l.setStyle(base); });
+        l.on('click',function(){
+          map.fitBounds(l.getBounds(),{paddingTopLeft:[24,48],paddingBottomRight:[24,16],maxZoom:8,animate:true});
+          if(opts.onState) opts.onState(f.properties.abbr,f.properties.name);
+        });
+      }}).addTo(map);
+      layer.bringToBack();
+    }).catch(function(){});
+  }
+
+  window.NOMap={create:create,markers:markers,show:show,highlight:highlight,fit:fit,states:states,US:US};
 })();

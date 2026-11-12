@@ -464,6 +464,9 @@
   var g=document.getElementById('grid'), count=document.getElementById('count');
   var map=null, marks=[];
   try{ map=NOMap.create(document.getElementById('map'),{wheelOnFocus:true,dragOnMobile:false,zoomPosition:'bottomright'}); }catch(e){}
+  // Count of listings currently shown in a state, for the state hover label.
+  function stateCount(ab){ var n=0; L.forEach(function(x){ if(x.card&&x.card.style.display!=='none'&&/, ([A-Z]{2})$/.test(x.loc)&&RegExp.$1===ab) n++; }); return n; }
+  if(map) NOMap.states(map,{count:stateCount});
   var empty=document.createElement('div'); empty.className='empty'; empty.textContent='No listings match. Try another filter or search.';
   var loading=document.createElement('div'); loading.className='loading'; loading.textContent='Loading listings…';
   g.appendChild(loading);

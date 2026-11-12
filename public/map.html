@@ -75,6 +75,7 @@
   var esc=NOL.esc, money=NOL.money, photo=NOL.photo;
   var map=NOMap.create(document.getElementById('map'),{wheel:true,zoomPosition:'topright'});
   var items=[], marks=[], filter='all';
+  NOMap.states(map,{count:function(ab){ var n=0; items.forEach(function(x,i){ if(marks[i]&&map.hasLayer(marks[i])&&/, ([A-Z]{2})$/.test(x.loc)&&RegExp.$1===ab) n++; }); return n; }});
   var q=document.getElementById('q'), catSel=document.getElementById('catSel'), countEl=document.getElementById('count'), note=document.getElementById('note');
   (window.NO_CATEGORIES||[]).forEach(function(c){ var o=document.createElement('option'); o.value=c[0]; o.textContent=c[0]; catSel.appendChild(o); });
 
