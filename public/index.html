@@ -45,6 +45,9 @@
   .chip{padding:7px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font:inherit;font-size:14px;white-space:nowrap;
     color:var(--ink);cursor:pointer}
   .chip:hover{border-color:var(--accent)}
+  .chipsel{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;max-width:230px}
+  .chipsel.on{background-color:var(--accent);color:#fff;border-color:transparent}
   .card{cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,outline-color .15s ease;outline:2px solid transparent}
   .card:hover{transform:translateY(-2px)}
   .card.hl{outline-color:var(--accent)}
@@ -302,12 +305,7 @@
     <div class="chips">
       <button type="button" class="chip ai" id="openPicks">✦ Best Picks</button>
       <button type="button" class="chip on" data-f="all">All</button>
-      <button type="button" class="chip" data-f="cat:Food & drink">Food &amp; drink</button>
-      <button type="button" class="chip" data-f="cat:Fitness">Fitness</button>
-      <button type="button" class="chip" data-f="cat:Services">Services</button>
-      <button type="button" class="chip" data-f="cat:Retail">Retail</button>
-      <button type="button" class="chip" data-f="cat:Routes">Routes</button>
-      <button type="button" class="chip" data-f="cat:Other">Other</button>
+      <select class="chip chipsel" id="catSel" aria-label="Business type"><option value="">All business types</option></select>
       <button type="button" class="chip" data-f="under100">Under $100K</button>
       <button type="button" class="chip" data-f="verified">Verified only</button>
     </div>
@@ -380,14 +378,7 @@
     </div>
     <div class="fld full">
       <label>Business types</label>
-      <div class="seg" id="pCats">
-        <button type="button" class="on" data-v="Food & drink">Food &amp; drink</button>
-        <button type="button" class="on" data-v="Fitness">Fitness</button>
-        <button type="button" class="on" data-v="Services">Services</button>
-        <button type="button" class="on" data-v="Routes">Routes</button>
-        <button type="button" class="on" data-v="Retail">Retail</button>
-        <button type="button" class="on" data-v="Other">Other</button>
-      </div>
+      <select id="pCat"><option value="">Any business type</option></select>
     </div>
     <div class="fld full">
       <label>What matters most?</label>
@@ -436,6 +427,7 @@
   </div>
 </div>
 
+<script src="/categories.js"></script>
 <script src="/auth.js"></script>
 <script>
 (function(){
@@ -460,6 +452,11 @@
   ];
   EXAMPLES.forEach(function(x){x.example=true});
   var MIN_SHOWN=6; // pad with examples until there are this many real listings
+  var CATS=(window.NO_CATEGORIES||[]).map(function(c){return c[0]});
+  ['catSel','pCat'].forEach(function(id){ var el=document.getElementById(id); if(!el)return;
+    CATS.forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; el.appendChild(o); }); });
+  var PALETTE=[["#ffb36b","#ff6b8b"],["#8ec5ff","#b49cff"],["#a0e9ff","#5aa9e6"],["#f9a8d4","#c084fc"],["#9be7a8","#3fb8a3"],["#ffd56b","#ff9f6b"],["#7f8cff","#3a3f9e"],["#d9a77a","#8a5a3b"]];
+  function gradFor(c){ if(GRAD[c])return GRAD[c]; var h=0; for(var i=0;i<c.length;i++)h=(h*31+c.charCodeAt(i))>>>0; return PALETTE[h%PALETTE.length]; }
   var GRAD={"Food & drink":["#ffb36b","#ff6b8b"],"Fitness":["#8ec5ff","#b49cff"],"Services":["#a0e9ff","#5aa9e6"],"Retail":["#f9a8d4","#c084fc"],"Routes":["#9be7a8","#3fb8a3"],"Other":["#cbd5e1","#94a3b8"]};
   var REAL=[], L=[];
 
@@ -475,7 +472,7 @@
   function fromApi(l){
     var photos=(l.photos||[]).map(safeImg).filter(Boolean);
     return {id:l.id,n:l.name,loc:l.city+', '+l.state,lat:l.lat,lng:l.lng,ask:l.ask/1000,rev:l.revenue/1000,cf:l.cashFlow/1000,
-      cat:l.category,g:GRAD[l.category]||GRAD.Other,img:photos[0]||'',photos:photos,v:!!l.verified,d:l.description,
+      cat:(l.category==='Other'&&l.categoryOther)?l.categoryOther:l.category,catKey:l.category,g:gradFor(l.category),img:photos[0]||'',photos:photos,v:!!l.verified,d:l.description,
       tier:l.tier,video:/^https:\/\/\S+$/i.test(l.video||'')?l.video:'',year:l.yearEstablished,emp:l.employees,reason:l.reason};
   }
   // Rough US map projection for the pins (continental US box).
@@ -532,7 +529,7 @@
     var t=q.value.trim().toLowerCase(), n=0;
     L.forEach(function(x){
       var ok=true;
-      if(filter.indexOf('cat:')===0) ok=x.cat===filter.slice(4);
+      if(filter.indexOf('cat:')===0) ok=(x.catKey||x.cat)===filter.slice(4);
       else if(filter==='under100') ok=x.ask<100;
       else if(filter==='verified') ok=x.v;
       if(ok&&t) ok=(x.n+' '+x.loc+' '+x.cat).toLowerCase().indexOf(t)>-1;
@@ -541,11 +538,18 @@
     empty.style.display=n?'none':'';
     count.textContent='· '+n+(n===1?' result':' results');
   }
+  var catSel=document.getElementById('catSel');
   document.querySelectorAll('.chip[data-f]').forEach(function(c){
     c.addEventListener('click',function(){
       document.querySelectorAll('.chip[data-f]').forEach(function(o){o.classList.toggle('on',o===c)});
+      catSel.value=''; catSel.classList.remove('on');
       filter=c.dataset.f; apply();
     });
+  });
+  catSel.addEventListener('change',function(){
+    var v=catSel.value; catSel.classList.toggle('on',!!v);
+    document.querySelectorAll('.chip[data-f]').forEach(function(o){o.classList.toggle('on',!v&&o.dataset.f==='all')});
+    filter=v?'cat:'+v:'all'; apply();
   });
   q.addEventListener('input',apply);
 
@@ -646,7 +650,8 @@
     })});
     return function(){var v=[];el.querySelectorAll('button.on').forEach(function(b){v.push(b.dataset.v)});return multi?v:v[0]};
   }
-  var getPay=seg('pPay'), getCats=seg('pCats',true), getPri=seg('pPri');
+  var getPay=seg('pPay'), getPri=seg('pPri');
+  function getCat(){return document.getElementById('pCat').value}
   function miles(a,b,c,d){var R=3958.8,r=Math.PI/180,x=Math.sin((c-a)*r/2),y=Math.sin((d-b)*r/2);
     return 2*R*Math.asin(Math.sqrt(x*x+Math.cos(a*r)*Math.cos(c*r)*y*y))}
   function pmtYear(principal,ratePct,years){ // annual loan payment (monthly amortization x 12)
@@ -656,7 +661,7 @@
   function num(id){var v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v}
 
   function runPicks(){
-    var budget=num('pBudget'), pay=getPay(), cats=getCats(), pri=getPri(), rad=parseFloat(document.getElementById('pRad').value);
+    var budget=num('pBudget'), pay=getPay(), wantCat=getCat(), pri=getPri(), rad=parseFloat(document.getElementById('pRad').value);
     var down=Math.min(Math.max(num('pDown'),1),100)/100, rate=num('pRate'), yrs=Math.max(num('pYears'),1);
     var maxPrice=pay==='loan'?budget/down:budget;
     var origin=pLoc.value==='0'?here:[PLACES[pLoc.value][1],PLACES[pLoc.value][2]];
@@ -666,14 +671,14 @@
       if(useReal&&x.example)return;
       var price=x.ask*1000, rev=x.rev*1000, cf=x.cf*1000;
       if(!(price>0)||!(cf>0))return;
-      if(cats.indexOf(x.cat)<0||price>maxPrice)return;
+      if((wantCat&&(x.catKey||x.cat)!==wantCat)||price>maxPrice)return;
       var dist=origin&&x.lat!=null?miles(origin[0],origin[1],x.lat,x.lng):null;
       if(dist!==null&&dist>rad)return;
       var roi=cf/price, payback=price/cf, margin=rev>0?cf/rev:0, cash=price, coc=roi, ds=0;
       if(pay==='loan'){cash=price*down; ds=pmtYear(price-cash,rate,yrs); coc=(cf-ds)/cash;}
       out.push({i:i,x:x,roi:roi,payback:payback,margin:margin,coc:coc,cash:cash,ds:ds,dist:dist,dscr:ds?cf/ds:null});
     });
-    if(!out.length){document.getElementById('pResults').innerHTML='<div class="nores">No listings fit yet. Try a bigger budget, a wider distance, or more business types.</div>';return}
+    if(!out.length){document.getElementById('pResults').innerHTML='<div class="nores">No listings fit yet. Try a bigger budget, a wider distance, or any business type.</div>';return}
     // Normalize each metric 0..1 across the matches, then weight by the buyer's priority.
     function norm(k,invert){var v=out.map(function(o){return o[k]}),lo=Math.min.apply(0,v),hi=Math.max.apply(0,v);
       out.forEach(function(o){var n=hi===lo?1:(o[k]-lo)/(hi-lo);o['n_'+k]=invert?1-n:n})}

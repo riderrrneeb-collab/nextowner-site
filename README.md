@@ -51,3 +51,10 @@ Static pages plus three small Netlify Functions that power member logins.
 - ID verification uses Stripe Identity (photo ID + selfie, `/api/verify`). Turn on Identity in the Stripe Dashboard and give the restricted key **write** access to Identity verification sessions. Verified sellers' listings get the ✓ Verified badge automatically; the daily job finishes checks that were still processing.
 - Admins (mynextownerofficial@gmail.com, plus any emails in the `ADMIN_EMAILS` variable, comma-separated) can create listings without a plan and verify, hide or delete any listing at /admin.
 - Example listings fill the homepage until there are 6 real ones, and are labeled "Example".
+
+## Google Drive photo picker (optional)
+
+The "Add from Google Drive" button on the listing form appears once these Netlify variables are set:
+`GOOGLE_PICKER_API_KEY` (an API key restricted to the Google Picker API and Google Drive API, and to https://mynextowner.com/* and https://docs.google.com/*),
+`GOOGLE_CLIENT_ID` (a Web application OAuth client with https://mynextowner.com as an authorized JavaScript origin) and
+`GOOGLE_PROJECT_NUMBER` (the Google Cloud project number). It asks only for `drive.file` access, so sellers grant access just to the photos they pick.

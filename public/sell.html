@@ -45,6 +45,8 @@
   .opt input{margin-top:3px;width:18px;height:18px;flex:0 0 auto}
   .opt b{display:block}
   .opt span{color:var(--muted);font-size:13px}
+  .drivebtn{display:inline-flex;align-items:center;gap:8px;margin:2px 0 8px;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .drivebtn:disabled{opacity:.6;cursor:default}
   .inc{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--good);margin-top:2px}
   .inc:empty{display:none}
   .pwskip{display:block;width:100%;margin-top:10px;padding:10px;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
@@ -81,10 +83,9 @@
       <div class="f"><label for="name">Business name <span class="req">*</span></label>
         <input id="name" maxlength="80" required placeholder="e.g. Pearl Street Taco Truck"></div>
       <div class="grid2">
-        <div class="f"><label for="category">Category <span class="req">*</span></label>
-          <select id="category" required>
-            <option value="">Choose…</option><option>Food &amp; drink</option><option>Fitness</option><option>Services</option>
-            <option>Retail</option><option>Routes</option><option>Other</option></select></div>
+        <div class="f"><label for="category">Business type <span class="req">*</span></label>
+          <select id="category" required><option value="">Choose…</option></select>
+          <input id="categoryOther" maxlength="40" placeholder="Type your business type, e.g. Laundromat" hidden style="margin-top:8px"></div>
         <div class="f"><label for="yearEstablished">Year established</label>
           <input id="yearEstablished" inputmode="numeric" maxlength="4" placeholder="2019"></div>
       </div>
@@ -116,6 +117,7 @@
       <div class="f">
         <div class="thumbs" id="thumbs"></div>
         <input id="files" type="file" accept="image/*" multiple hidden>
+        <button type="button" class="drivebtn" id="driveBtn" hidden><svg width="18" height="16" viewBox="0 0 87.3 78" aria-hidden="true"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>Add from Google Drive</button>
         <div class="hint">The first photo is the cover. Photos are resized automatically.</div>
       </div>
       <div class="f"><label for="video">Video tour link</label><input id="video" maxlength="300" placeholder="https://youtube.com/…">
@@ -150,6 +152,7 @@
 
 <div id="pwRoot"></div>
 
+<script src="/categories.js"></script>
 <script src="/auth.js"></script>
 <script>
 (function(){
@@ -161,12 +164,16 @@
   };
   var ORDER=["starter","featured","premium"], RANK={free:0,starter:1,featured:2,premium:3};
   var LIMIT={free:5,starter:10,featured:15,premium:25};
-  var FIELDS=['name','category','yearEstablished','city','state','zip','ask','revenue','cashFlow','employees','reason','description','video','contactName','contactEmail','contactPhone'];
+  var FIELDS=['name','category','categoryOther','yearEstablished','city','state','zip','ask','revenue','cashFlow','employees','reason','description','video','contactName','contactEmail','contactPhone'];
   var $=function(id){return document.getElementById(id)};
   var form=$('form'), msg=$('msg'), lead=$('lead'), banner=$('banner');
   var photos=[], uploading=0, editing=null, me=null, email='', AFTER='no_after_pay';
   var params=new URLSearchParams(location.search), editId=params.get('id');
   $('state').innerHTML='<option value="">—</option>'+STATES.map(function(s){return '<option>'+s+'</option>'}).join('');
+  $('category').innerHTML='<option value="">Choose…</option>'+(window.NO_CATEGORIES||[]).map(function(c){
+    return '<option value="'+c[0].replace(/&/g,'&amp;')+'">'+c[0].replace(/&/g,'&amp;')+(c[0]==='Other'?'':' — '+c[1])+'</option>'}).join('');
+  function syncOther(){ var o=$('category').value==='Other'; $('categoryOther').hidden=!o; $('categoryOther').required=o; if(!o)$('categoryOther').value=''; }
+  $('category').addEventListener('change',function(){ syncOther(); if(this.value==='Other') $('categoryOther').focus(); });
 
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function say(t,kind){msg.className='msg'+(kind?' '+kind:'');msg.textContent=t||''}
@@ -242,18 +249,65 @@
       img.src=url;
     });
   }
-  $('files').addEventListener('change',function(e){
-    var room=Math.max(0,limit()-photos.length-uploading), all=[].slice.call(e.target.files||[]), files=all.slice(0,room); e.target.value='';
+  // Adds photos from any source. getBlob(item) resolves to an image Blob.
+  function addPhotos(items,getBlob){
+    var room=Math.max(0,limit()-photos.length-uploading), take=items.slice(0,room);
     say('');
-    files.forEach(function(f){
+    take.forEach(function(it){
       uploading++; renderThumbs();
-      shrink(f).then(function(blob){return NO.api('/api/photos',{method:'POST',body:blob,headers:{'content-type':'image/jpeg'}})})
+      Promise.resolve(getBlob(it)).then(shrink)
+        .then(function(blob){return NO.api('/api/photos',{method:'POST',body:blob,headers:{'content-type':'image/jpeg'}})})
         .then(function(d){photos.push({key:d.key,url:d.url})})
         .catch(function(err){say(err.message,'err')})
         .then(function(){uploading--;renderThumbs()});
     });
-    if(all.length>files.length) photoWall(photos.length+uploading+(all.length-files.length));
+    if(items.length>take.length) photoWall(photos.length+uploading+(items.length-take.length));
+  }
+  $('files').addEventListener('change',function(e){
+    var all=[].slice.call(e.target.files||[]); e.target.value='';
+    addPhotos(all,function(f){return f});
   });
+
+  // ---------- Google Drive picker (shown when configured in Netlify) ----------
+  var gp=null, gToken=null, gTokenClient=null;
+  function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Could not load Google Drive.'))};document.head.appendChild(s)})}
+  var gReady=null;
+  function googleReady(){
+    if(!gReady) gReady=Promise.all([loadScript('https://apis.google.com/js/api.js'),loadScript('https://accounts.google.com/gsi/client')])
+      .then(function(){return new Promise(function(res){gapi.load('picker',res)})})
+      .then(function(){ gTokenClient=google.accounts.oauth2.initTokenClient({client_id:gp.clientId,scope:'https://www.googleapis.com/auth/drive.file',callback:function(){}}); });
+    return gReady;
+  }
+  function getToken(){
+    return new Promise(function(resolve,reject){
+      gTokenClient.callback=function(r){ if(r.error){reject(new Error('Google sign-in was cancelled.'));return} gToken=r.access_token; resolve(gToken); };
+      gTokenClient.error_callback=function(){reject(new Error('Google sign-in was cancelled.'))};
+      gTokenClient.requestAccessToken({prompt:gToken?'':'consent'});
+    });
+  }
+  function openDrive(){
+    if(photos.length+uploading>=limit()) return photoWall(photos.length+uploading+1);
+    var b=$('driveBtn'); b.disabled=true;
+    googleReady().then(getToken).then(function(token){
+      b.disabled=false;
+      var view=new google.picker.DocsView(google.picker.ViewId.DOCS_IMAGES).setIncludeFolders(true).setSelectFolderEnabled(false);
+      new google.picker.PickerBuilder()
+        .addView(view)
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        .setOAuthToken(token).setDeveloperKey(gp.apiKey).setAppId(gp.appId)
+        .setTitle('Choose photos of your business')
+        .setCallback(function(data){
+          if(data[google.picker.Response.ACTION]!==google.picker.Action.PICKED)return;
+          var docs=data[google.picker.Response.DOCUMENTS]||[];
+          addPhotos(docs,function(doc){
+            return fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(doc[google.picker.Document.ID])+'?alt=media',{headers:{authorization:'Bearer '+token}})
+              .then(function(r){ if(!r.ok) throw new Error('Could not download that photo from Google Drive.'); return r.blob(); });
+          });
+        }).build().setVisible(true);
+    }).catch(function(err){ b.disabled=false; say(err.message,'err'); });
+  }
+  NO.config().then(function(c){ if(c&&c.googlePicker){ gp=c.googlePicker; $('driveBtn').hidden=false; } }).catch(function(){});
+  $('driveBtn').addEventListener('click',openDrive);
   $('description').addEventListener('input',function(){$('dcount').textContent=this.value.length});
 
   // ---------- Paid features that look free ----------
@@ -336,6 +390,7 @@
     photos=(l.photoKeys||[]).map(function(k,i){return {key:k,url:l.allPhotos[i]}});
     $('featured').checked=!!l.featured; $('top').checked=!!l.top; $('social').checked=!!l.social;
     $('dcount').textContent=(l.description||'').length;
+    syncOther(); $('categoryOther').value=l.categoryOther||'';
   }
   function show(){ renderThumbs(); renderId(); renderIncluded(); form.hidden=false; }
 

@@ -140,6 +140,38 @@
     verifyCode: verifyCode, onSignIn: onSignIn, config: config, signInWithGoogle: signInWithGoogle, api: api,
     signOut: signOut, openPortal: openPortal, prefillCheckout: prefillCheckout, updateNav: updateNav };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", updateNav); else updateNav();
+
+  // Beta notice: a small pop-up shown once per browser until closed.
+  function betaNotice() {
+    var KEY = "no_beta_dismissed";
+    try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+    var css = document.createElement("style");
+    css.textContent =
+      ".nobeta{position:fixed;left:16px;bottom:16px;z-index:60;max-width:340px;padding:14px 40px 14px 16px;border-radius:18px;" +
+      "background:var(--glass,rgba(255,255,255,.85));border:1px solid var(--edge,rgba(255,255,255,.8));color:var(--ink,#0f172a);" +
+      "box-shadow:0 10px 40px rgba(15,23,42,.18);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);" +
+      "font:14px/1.45 -apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}" +
+      ".nobeta.show{opacity:1;transform:none}.nobeta b{display:block;margin-bottom:2px}" +
+      ".nobeta a{color:var(--accent,#0a84ff);font-weight:600;text-decoration:none;white-space:nowrap}" +
+      ".nobeta button{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:0;background:transparent;color:inherit;font-size:18px;cursor:pointer;opacity:.6}" +
+      ".nobeta button:hover{opacity:1}" +
+      "@media (max-width:480px){.nobeta{left:12px;right:12px;bottom:12px;max-width:none}}";
+    document.head.appendChild(css);
+    var box = document.createElement("div");
+    box.className = "nobeta";
+    box.setAttribute("role", "status");
+    box.innerHTML = "<b>NextOwner is in beta</b>Have a suggestion or found something that's broken? Email us at<br>" +
+      '<a href="mailto:mynextownerofficial@gmail.com?subject=NextOwner%20beta%20feedback">mynextownerofficial@gmail.com</a>' +
+      '<button type="button" aria-label="Close">×</button>';
+    box.querySelector("button").addEventListener("click", function () {
+      try { localStorage.setItem(KEY, "1"); } catch (e) {}
+      box.classList.remove("show");
+      setTimeout(function () { box.remove(); }, 400);
+    });
+    document.body.appendChild(box);
+    setTimeout(function () { box.classList.add("show"); }, 1200);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", betaNotice); else betaNotice();
   // Keep "Log in" / "Account" in sync if the person signs in from another tab.
   window.addEventListener("focus", updateNav);
   window.addEventListener("storage", function (e) { if (e.key && e.key.indexOf("sb-") === 0) updateNav(); });

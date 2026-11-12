@@ -5,7 +5,13 @@ import { getStore } from "@netlify/blobs";
 import { createHash, randomUUID } from "node:crypto";
 import { customersFor, plansFor } from "./shared.mjs";
 
-export const CATEGORIES = ["Food & drink", "Fitness", "Services", "Retail", "Routes", "Other"];
+// Keep in sync with public/categories.js.
+export const CATEGORIES = [
+  "Food & drink", "Fitness", "Health & beauty", "Healthcare", "Retail", "E-commerce & online",
+  "Technology & software", "Services", "Home services", "Automotive", "Construction & trades", "Routes",
+  "Transportation & logistics", "Manufacturing", "Wholesale & distribution", "Childcare & education",
+  "Pet services", "Hospitality & travel", "Entertainment & recreation", "Agriculture", "Other",
+];
 const RANK = { premium: 3, featured: 2, starter: 1, free: 0 };
 const MAX_PHOTOS = 25;
 // Photos shown publicly per plan. Drafts without a plan can hold the Starter amount.
@@ -56,7 +62,7 @@ export function sortForDisplay(list) {
 // What anyone can see. Contact details are left out on purpose.
 export function publicView(l) {
   return {
-    id: l.id, name: l.name, category: l.category, city: l.city, state: l.state,
+    id: l.id, name: l.name, category: l.category, categoryOther: l.categoryOther || "", city: l.city, state: l.state,
     lat: l.lat ?? null, lng: l.lng ?? null,
     ask: l.ask, revenue: l.revenue, cashFlow: l.cashFlow,
     yearEstablished: l.yearEstablished ?? null, employees: l.employees ?? null,
@@ -101,6 +107,7 @@ export function cleanListing(input, ownerEmail, allowForeignPhotos = []) {
   const v = {
     name: text(input.name, 80),
     category: CATEGORIES.includes(input.category) ? input.category : "",
+    categoryOther: input.category === "Other" ? text(input.categoryOther, 40) : "",
     city: text(input.city, 60),
     state: text(input.state, 2).toUpperCase(),
     zip: text(input.zip, 5),
@@ -121,7 +128,8 @@ export function cleanListing(input, ownerEmail, allowForeignPhotos = []) {
     top: input.top === true,
   };
   if (v.name.length < 3) errors.push("Business name");
-  if (!v.category) errors.push("Category");
+  if (!v.category) errors.push("Business type");
+  if (v.category === "Other" && v.categoryOther.length < 2) errors.push("Business type (type it in for Other)");
   if (v.city.length < 2) errors.push("City");
   if (!/^[A-Z]{2}$/.test(v.state)) errors.push("State (2 letters)");
   if (v.zip && !/^\d{5}$/.test(v.zip)) errors.push("ZIP code (5 digits)");
