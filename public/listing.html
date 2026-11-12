@@ -126,6 +126,9 @@
        '<button type="button" class="btn" id="contact">Contact seller</button>'+
        '<button type="button" class="btn sec" id="share">Share this listing</button>'+
        '<div class="cbox" id="cbox" hidden></div></section>'+
+       (x.broker?'<section class="box"><h2>Listed by</h2><p style="margin:0 0 2px;font-weight:600">'+esc(x.broker.name)+'</p>'+
+         '<p class="sub" style="margin:0 0 4px">'+esc(x.broker.firm)+' · Business broker</p>'+
+         '<a class="btn sec" href="/broker/'+encodeURIComponent(x.broker.slug)+'">See all their listings</a></section>':'')+
        '<section class="box"><h2>Selling a business?</h2><p class="sub" style="margin:0 0 4px">List yours free and reach buyers near you.</p><a class="btn sec" href="/sell">List your business</a></section></aside></div>';
     page.innerHTML=h;
     if(new URLSearchParams(location.search).get('published')){

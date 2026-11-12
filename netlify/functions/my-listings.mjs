@@ -6,13 +6,14 @@ export default async (req) => {
   try {
     const email = await verifiedEmail(req);
     if (!email) return json({ error: "Please log in." }, 401);
-    const { mine, slots, used, bestTier, admin } = await syncOwner(email);
+    const { mine, slots, used, bestTier, admin, broker } = await syncOwner(email);
     const seller = await getSeller(email);
     return json({
       email, admin, slots: admin ? 999 : slots, used, bestTier,
       canPublish: admin || used < slots,
       photoLimits: PHOTO_LIMIT,
       idVerified: !!seller.idVerified, verifyStatus: seller.verifyStatus || "none",
+      broker, brokerStatus: (seller.broker && seller.broker.status) || null, brokerSlug: (seller.broker && seller.broker.slug) || null,
       listings: mine.map(ownerView),
     });
   } catch (err) {

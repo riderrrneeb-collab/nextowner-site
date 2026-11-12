@@ -88,6 +88,16 @@
          'Verify your ID with Stripe Identity (photo ID + selfie) to earn the ✓ Verified badge.')+'</small></div>'+
         (d.idVerified||d.verifyStatus==='processing'?'':'<button class="btn sec" id="idgo" type="button" style="width:auto;margin:0;padding:10px 16px">Verify my ID</button>')+'</div>';
     }
+    // Broker program
+    if(d.brokerStatus==='approved'&&d.broker){
+      h+='<div class="plan" style="margin-top:12px"><div><b>Free broker plan</b><small>'+d.used+' of '+d.broker.listings+' listings used · upgrade any listing to Featured or Premium on the <a href="/pricing">plans page</a></small>'+
+        '<small class="lact"><a href="/broker/'+encodeURIComponent(d.brokerSlug)+'">Your broker page</a> · <a href="/brokers#apply">Edit broker profile</a></small></div><span class="pill ok">Approved</span></div>';
+    } else if(d.brokerStatus==='pending'){
+      h+='<div class="plan" style="margin-top:12px"><div><b>Broker application</b><small>We\'re reviewing it, usually within one business day.</small>'+
+        '<small class="lact"><a href="/brokers#apply">Edit application</a></small></div><span class="pill warn">In review</span></div>';
+    } else if(!d.admin&&!d.brokerStatus){
+      h+='<p class="foot" style="text-align:left">Are you a business broker? <a href="/brokers">List up to 15 businesses free</a>.</p>';
+    }
     h+='<div class="row">';
     h+='<a class="btn" href="/sell">'+(d.listings.some(function(l){return l.status==='draft'})?'Continue your draft':(d.listings.length?'Add another listing':'List a business'))+'</a>';
     if(d.admin) h+='<a class="btn sec" href="/admin">Admin: review all listings</a>';

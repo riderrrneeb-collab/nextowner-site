@@ -37,7 +37,7 @@
     var photos=(l.photos||[]).map(safeImg).filter(Boolean);
     return {id:l.id,n:l.name,loc:l.city+', '+l.state,lat:l.lat,lng:l.lng,ask:l.ask/1000,rev:l.revenue/1000,cf:l.cashFlow/1000,
       cat:(l.category==='Other'&&l.categoryOther)?l.categoryOther:l.category,catKey:l.category,g:gradFor(l.category),img:photos[0]||'',photos:photos,v:!!l.verified,d:l.description,
-      tier:l.tier,video:/^https:\/\/\S+$/i.test(l.video||'')?l.video:'',year:l.yearEstablished,emp:l.employees,reason:l.reason};
+      tier:l.tier,broker:l.broker||null,video:/^https:\/\/\S+$/i.test(l.video||'')?l.video:'',year:l.yearEstablished,emp:l.employees,reason:l.reason};
   }
   // Live listings plus examples (until there are MIN_SHOWN live ones).
   function load(){

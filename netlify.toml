@@ -47,3 +47,13 @@
   from = "/listing/*"
   to = "/listing.html"
   status = 200
+
+[[redirects]]
+  from = "/brokers"
+  to = "/brokers.html"
+  status = 200
+
+[[redirects]]
+  from = "/broker/*"
+  to = "/broker.html"
+  status = 200

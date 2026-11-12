@@ -21,6 +21,19 @@ export const TIERS = ["free", "starter", "featured", "premium"];
 export const FREE_SLOTS = 1;
 export const tierRank = (t) => RANK[t] || 0;
 
+// ---------- Brokers ----------
+// Brokers apply on /brokers and NextOwner approves them. The broker plan is free:
+// an approved broker gets BROKER_LISTINGS live listings with BROKER_TIER features.
+// Paid seller plans (Featured, Premium) upgrade listings on top of that.
+export const BROKER_LISTINGS = 15;
+export const BROKER_TIER = "starter";
+export const brokerActive = (s) => !!(s && s.broker && s.broker.status === "approved");
+const slugify = (v) => String(v || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+export const brokerSlug = (b, email) => (slugify(b.firm || b.name) || "broker") + "-" + ownerKey(email).slice(0, 5);
+// The "Listed by" credit shown on a broker's listings.
+export const brokerCredit = (s) => (s && s.broker && s.broker.status === "approved")
+  ? { name: s.broker.name || "", firm: s.broker.firm || "", slug: s.broker.slug } : null;
+
 // NextOwner admins can verify, hide or remove any listing.
 export function isAdmin(email) {
   const extra = (process.env.ADMIN_EMAILS || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
@@ -71,6 +84,7 @@ export function publicView(l) {
     video: (RANK[l.tier] || 0) >= RANK.starter ? l.video || "" : "",
     photos: (l.photos || []).slice(0, PHOTO_LIMIT[l.tier] ?? PHOTO_LIMIT.free).map((k) => `/api/photos/${k}`),
     verified: !!l.verified && (RANK[l.tier] || 0) >= RANK.starter, tier: l.tier || "free", createdAt: l.createdAt,
+    broker: l.broker || null,
   };
 }
 
@@ -174,11 +188,20 @@ export async function geocodeZip(zip) {
 export async function syncOwner(email, plans, listings) {
   if (!plans) plans = await plansFor(await customersFor(email));
   const seller = plans.filter((p) => p.side === "seller").sort((a, b) => RANK[b.tier] - RANK[a.tier]);
+  const profile = await getSeller(email);
+  const broker = brokerActive(profile), credit = brokerCredit(profile);
   const all = listings || (await allListings());
   const mine = all.filter((l) => l.owner === email)
     .sort((a, b) => (a.status === "draft") - (b.status === "draft") || a.createdAt - b.createdAt);
   const used = mine.filter((l) => l.status !== "draft").length;
-  const bestTier = seller[0] ? seller[0].tier : null;
+  // Listing slots: each paid seller plan first (so upgrades apply), then the broker's free slots.
+  const slotTiers = seller.map((p) => p.tier).concat(broker ? Array(BROKER_LISTINGS).fill(BROKER_TIER) : []);
+  let bestTier = seller[0] ? seller[0].tier : null;
+  if (broker && (RANK[BROKER_TIER] > (RANK[bestTier] || 0))) bestTier = BROKER_TIER;
+  // Keep each listing's "Listed by" credit in step with the owner's broker profile.
+  for (const l of mine) {
+    if (JSON.stringify(l.broker || null) !== JSON.stringify(credit)) { l.broker = credit; await saveListing(l); }
+  }
   if (isAdmin(email)) {
     // NextOwner's own listings (for example, ones set up for brokers) don't need a plan.
     for (const l of mine) {
@@ -187,19 +210,22 @@ export async function syncOwner(email, plans, listings) {
     }
     return { mine, slots: Infinity, plans, used, bestTier: "premium", admin: true };
   }
+  // Brokers' free plan replaces the one free listing everyone else gets.
+  const freeSlots = broker ? 0 : FREE_SLOTS;
   for (let i = 0; i < mine.length; i++) {
     const l = mine[i];
-    const plan = seller[i];
-    const free = !plan && i < seller.length + FREE_SLOTS;
-    const active = !!plan || free;
-    const tier = plan ? plan.tier : "free";
+    const slot = slotTiers[i];
+    const free = !slot && i < slotTiers.length + freeSlots;
+    const active = !!slot || free;
+    const tier = slot || "free";
     if (l.active !== active || l.tier !== tier) {
       l.active = active;
       l.tier = tier;
       await saveListing(l);
     }
   }
-  return { mine, slots: seller.length + FREE_SLOTS, paidSlots: seller.length, plans, used, bestTier, admin: false };
+  return { mine, slots: slotTiers.length + freeSlots, paidSlots: seller.length, plans, used, bestTier, admin: false,
+    broker: broker ? { listings: BROKER_LISTINGS, tier: BROKER_TIER } : null };
 }
 
 // ---------- Sellers (ID verification) ----------

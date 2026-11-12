@@ -1,8 +1,9 @@
 // NextOwner admin tools (admins only).
 // GET   /api/admin/listings      — every listing, including hidden and unpaid ones
-// PATCH /api/admin/listings/:id  — set { verified: true|false } and/or { status: "live"|"hidden" }
+// PATCH /api/admin/listings/:id  — set { verified: true|false }, { status: "live"|"hidden" },
+//                                  or { owner: "broker@email" } to hand a listing set up by NextOwner to its broker
 import { json, verifiedEmail } from "../lib/shared.mjs";
-import { allListings, getListing, saveListing, ownerView, isAdmin } from "../lib/listings.mjs";
+import { allListings, getListing, saveListing, ownerView, isAdmin, syncOwner, getSeller } from "../lib/listings.mjs";
 
 export default async (req, context) => {
   try {
@@ -27,8 +28,15 @@ export default async (req, context) => {
         l.verifiedBy = body.verified ? email : null;
       }
       if (body.status === "live" || body.status === "hidden") l.status = body.status;
+      let moved = null;
+      if (typeof body.owner === "string") {
+        const to = body.owner.trim().toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return json({ error: "Enter a valid email to move this listing to." }, 400);
+        if (to !== l.owner) { moved = l.owner; l.owner = to; l.verified = !!(await getSeller(to)).idVerified; }
+      }
       l.updatedAt = Date.now();
       await saveListing(l);
+      if (moved) { await syncOwner(moved); await syncOwner(l.owner); Object.assign(l, await getListing(l.id)); }
       return json({ ok: true, listing: ownerView(l) });
     }
 

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo-120.png">
+<title>For business brokers · NextOwner</title>
+<meta name="description" content="Business brokers list up to 15 businesses free on NextOwner, with photos, video tours, a broker page and Listed by credit.">
+<link rel="stylesheet" href="/account.css">
+<style>
+  nav{max-width:960px}
+  main.bk{max-width:960px;margin:2vh auto 60px;padding:0 16px}
+  .hero{text-align:center;padding:24px 0 8px}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--accent);margin-bottom:14px}
+  .hero h1{font-size:clamp(32px,6vw,54px);letter-spacing:-.035em;line-height:1.05;margin:0 0 14px}
+  .hero h1 em{font-style:normal;background:linear-gradient(90deg,#0a84ff,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:clamp(16px,2.2vw,19px);max-width:640px;margin:0 auto 20px;line-height:1.55}
+  .cta{display:inline-block;width:auto;padding:14px 26px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:30px 0}
+  @media (max-width:760px){.grid{grid-template-columns:1fr}}
+  .feat{padding:20px;border-radius:22px;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+  .feat b{display:block;font-size:16px;margin-bottom:4px}
+  .feat span{color:var(--muted);font-size:14.5px;line-height:1.5}
+  .feat i{font-style:normal;font-size:22px;display:block;margin-bottom:8px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 30px;counter-reset:s}
+  @media (max-width:760px){.steps{grid-template-columns:1fr}}
+  .steps div{padding:16px 18px;border-radius:18px;background:var(--card);border:1px solid var(--line);font-size:14.5px;color:var(--muted);line-height:1.5}
+  .steps div::before{counter-increment:s;content:counter(s);display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:700;font-size:13px;margin-bottom:8px}
+  .steps b{display:block;color:var(--ink);font-size:15.5px}
+  #apply{max-width:620px;margin:0 auto}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.f2{grid-template-columns:1fr}}
+  .fld{margin-bottom:12px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:16px}
+  .fld textarea{min-height:90px;resize:vertical}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .status{padding:14px 16px;border-radius:16px;margin:0 0 16px;font-size:15px;line-height:1.5}
+  .status.pending{background:rgba(245,158,11,.12);color:var(--warn)}
+  .status.approved{background:rgba(22,163,74,.12);color:var(--good)}
+  .status.rejected{background:rgba(220,38,38,.1);color:#dc2626}
+  .fine{color:var(--muted);font-size:13px;text-align:center;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<nav><a class="logo" href="/">NextOwner</a><a class="nl" data-auth-link href="/login">Log in</a></nav>
+<main class="bk">
+  <section class="hero">
+    <span class="eyebrow">For business brokers</span>
+    <h1>Put your listings in front of <em>local buyers</em>. Free.</h1>
+    <p>Our broker plan is free: list up to 15 businesses with photos, video tours and your name on every listing. Each one gets a pin on our satellite map and its own page. Upgrade any listing whenever you want more visibility.</p>
+    <a class="btn cta" href="#apply">Apply in 2 minutes</a>
+  </section>
+
+  <div class="grid">
+    <div class="feat"><i>📸</i><b>Photos and video tours</b><span>Up to 10 photos and a video tour on every listing, included free. Add photos from your phone or Google Drive.</span></div>
+    <div class="feat"><i>🧑‍💼</i><b>"Listed by" credit</b><span>Every listing names you and your brokerage and links to your own broker page with all your listings.</span></div>
+    <div class="feat"><i>✓</i><b>Verified badge</b><span>Verify your ID with Stripe (photo ID and selfie), free for approved brokers, and your listings show ✓ Verified.</span></div>
+    <div class="feat"><i>💬</i><b>Leads come to you</b><span>Interested buyers get your contact details directly. No commission and no middleman, ever.</span></div>
+    <div class="feat"><i>📤</i><b>We'll set them up</b><span>Short on time? Email us links to your current listings and we'll add them to your account for you.</span></div>
+    <div class="feat"><i>⭐</i><b>Upgrade when you want</b><span>Move a listing to Featured or Premium for higher placement, more photos and social promotion. <a href="/pricing">See plans</a>.</span></div>
+  </div>
+
+  <div class="steps">
+    <div><b>Apply</b>Tell us your name, brokerage and license. It takes about 2 minutes.</div>
+    <div><b>We approve you</b>We review every broker to keep scammers off the site, usually within one business day.</div>
+    <div><b>List your businesses</b>Add up to 15 listings yourself, or send them over and we'll do it.</div>
+  </div>
+
+  <section class="panel" id="apply">
+    <h1 style="font-size:26px">Broker application</h1>
+    <p class="sub" id="lead">Log in or create an account with your work email, then fill this in.</p>
+    <div id="state"></div>
+    <div id="formwrap" hidden>
+      <form id="f" novalidate>
+        <div class="f2">
+          <div class="fld"><label for="name">Your name *</label><input id="name" autocomplete="name" maxlength="80" required></div>
+          <div class="fld"><label for="firm">Brokerage *</label><input id="firm" autocomplete="organization" maxlength="100" required></div>
+        </div>
+        <div class="f2">
+          <div class="fld"><label for="license">License number</label><input id="license" maxlength="40"><div class="hint">If your state licenses business brokers.</div></div>
+          <div class="fld"><label for="licenseState">License state</label><select id="licenseState"><option value="">Select</option></select></div>
+        </div>
+        <div class="f2">
+          <div class="fld"><label for="website">Website</label><input id="website" inputmode="url" placeholder="yourbrokerage.com" maxlength="200"></div>
+          <div class="fld"><label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel" maxlength="30"></div>
+        </div>
+        <div class="fld"><label for="bio">About you (shown on your broker page)</label><textarea id="bio" maxlength="600" placeholder="Years in business, industries and areas you cover."></textarea></div>
+        <button class="btn" id="go" type="submit">Submit application</button>
+      </form>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+    <p class="fine">The broker plan is free, with no card needed. Paid upgrades are optional, and you can remove your listings at any time. By applying you agree to our <a href="/terms">Terms of Service</a>.</p>
+  </section>
+</main>
+<script src="/auth.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)}, msg=$('msg');
+  "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA PR RI SC SD TN TX UT VT VA WA WV WI WY".split(' ').forEach(function(s){
+    var o=document.createElement('option'); o.value=s; o.textContent=s; $('licenseState').appendChild(o); });
+  function esc(s){var d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
+  var FIELDS=['name','firm','license','licenseState','website','phone','bio'];
+  function showState(r){
+    var b=r&&r.broker, st=$('state'), go=$('go');
+    if(!b){ st.innerHTML=''; go.textContent='Submit application'; return; }
+    FIELDS.forEach(function(k){ if(b[k]!=null) $(k).value=b[k]; });
+    go.textContent='Save broker profile';
+    if(b.status==='pending') st.innerHTML='<div class="status pending"><b>Application received.</b> We review every broker, usually within one business day. You can still edit your details below.</div>';
+    else if(b.status==='approved') st.innerHTML='<div class="status approved"><b>You\'re approved.</b> You can list up to '+r.terms.listings+' businesses free. '+
+      '<a href="/sell">Add a listing</a> · <a href="/broker/'+encodeURIComponent(b.slug)+'">View your broker page</a> · <a href="/account">Your listings</a></div>';
+    else if(b.status==='rejected') st.innerHTML='<div class="status rejected">We couldn\'t approve this application. If you think that\'s a mistake, email <a href="mailto:mynextownerofficial@gmail.com">mynextownerofficial@gmail.com</a>.</div>';
+  }
+  NO.session().then(function(s){
+    if(!s){
+      $('state').innerHTML='<a class="btn" href="/login?next=%2Fbrokers%23apply">Log in or create an account to apply</a>';
+      return;
+    }
+    $('lead').textContent='Signed in as '+s.user.email+'. Buyers who contact you see this email unless you add a contact email on each listing.';
+    $('formwrap').hidden=false;
+    return NO.api('/api/broker').then(showState);
+  }).catch(function(e){ msg.className='msg err'; msg.textContent=e.message; });
+  $('f').addEventListener('submit',function(e){
+    e.preventDefault();
+    var body={}; FIELDS.forEach(function(k){ body[k]=$(k).value; });
+    $('go').disabled=true; msg.className='msg'; msg.textContent='Saving…';
+    NO.api('/api/broker',{method:'POST',body:body}).then(function(r){
+      showState(r); msg.className='msg ok';
+      msg.textContent=r.broker.status==='pending'?'Thanks! We\'ll review your application and email you when you\'re approved.':'Saved.';
+      $('state').scrollIntoView({behavior:'smooth',block:'center'});
+    }).catch(function(err){ msg.className='msg err'; msg.textContent=err.message; })
+      .then(function(){ $('go').disabled=false; });
+  });
+})();
+</script>
+</body>
+</html>

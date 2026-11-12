@@ -3,7 +3,7 @@
 // GET  /api/verify — current status; when Stripe reports "verified", every one
 //                    of the seller's listings gets the ✓ Verified badge.
 import { json, verifiedEmail, customersFor, plansFor, stripeRequest } from "../lib/shared.mjs";
-import { getSeller, saveSeller, isAdmin } from "../lib/listings.mjs";
+import { getSeller, saveSeller, isAdmin, brokerActive } from "../lib/listings.mjs";
 import { refreshSeller } from "../lib/verification.mjs";
 
 const view = (s) => ({ verified: !!s.idVerified, status: s.idVerified ? "verified" : s.verifyStatus || "none", error: s.lastError || "" });
@@ -21,7 +21,7 @@ export default async (req) => {
 
     if (req.method === "POST") {
       if (seller.idVerified) return json(view(seller));
-      if (!isAdmin(email)) {
+      if (!isAdmin(email) && !brokerActive(seller)) {
         const plans = await plansFor(await customersFor(email));
         if (!plans.some((p) => p.side === "seller")) {
           return json({ error: "ID verification is included with every seller plan.", needPlan: true }, 402);

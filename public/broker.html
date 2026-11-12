@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo-120.png">
+<title>Business broker · NextOwner</title>
+<link rel="stylesheet" href="/account.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/nomap.css">
+<style>
+  nav{max-width:1080px}
+  main.bp{max-width:1080px;margin:2vh auto 60px;padding:0 16px}
+  .head{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .mono{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff;font-weight:700;font-size:28px;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .head h1{margin:0}
+  .head .sub{margin:4px 0 0}
+  .ver{color:var(--good);font-weight:600;font-size:14px;margin-left:8px}
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .links a{width:auto;margin:0;padding:10px 16px}
+  .bio{margin:16px 0 0;line-height:1.6;white-space:pre-wrap}
+  .bmap{height:320px;border-radius:22px;overflow:hidden;margin:18px 0}
+  .lgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:900px){.lgrid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.lgrid{grid-template-columns:1fr}}
+  .lc{display:block;border-radius:20px;overflow:hidden;background:var(--card);border:1px solid var(--edge);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;
+    transition:transform .15s ease}
+  .lc:hover{transform:translateY(-2px)}
+  .lc .im{height:130px;background-size:cover;background-position:center}
+  .lc .bd{padding:12px 14px 14px}
+  .lc b{display:block;font-size:16px}
+  .lc small{color:var(--muted)}
+  .lc .nn{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px;font-size:11.5px;color:var(--muted)}
+  .lc .nn em{display:block;font-style:normal;font-weight:700;font-size:14px;color:var(--ink)}
+  h2{font-size:20px;margin:26px 0 12px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<nav><a class="logo" href="/">NextOwner</a><a class="nl" href="/#browse">Browse businesses</a></nav>
+<main class="bp" id="page"><div class="panel">Loading…</div></main>
+<script src="/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/nomap.js"></script>
+<script src="/listings-data.js"></script>
+<script>
+(function(){
+  var esc=NOL.esc, money=NOL.money, photo=NOL.photo, page=document.getElementById('page');
+  var slug=decodeURIComponent((location.pathname.match(/^\/broker\/([^\/?#]+)/)||[])[1]||'');
+  function notFound(){ page.innerHTML='<div class="panel"><h1>Broker not found</h1><p class="sub">This broker page may have moved.</p><a class="btn" style="max-width:280px" href="/#browse">Browse businesses</a></div>'; }
+  if(!slug) return notFound();
+  fetch('/api/brokers/'+encodeURIComponent(slug)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){
+    var b=d.broker, items=d.listings.map(NOL.fromApi);
+    document.title=(b.firm||b.name)+' · Business broker · NextOwner';
+    var init=((b.firm||b.name||'?').match(/\b\w/g)||['?']).slice(0,2).join('').toUpperCase();
+    var site=b.website?'<a class="btn sec" href="'+esc(b.website)+'" target="_blank" rel="noopener nofollow">Website</a>':'';
+    var tel=b.phone?'<a class="btn sec" href="tel:'+esc(b.phone.replace(/[^\d+]/g,''))+'">'+esc(b.phone)+'</a>':'';
+    var h='<div class="panel"><div class="head"><div class="mono">'+esc(init)+'</div><div><h1>'+esc(b.firm)+'</h1>'+
+      '<p class="sub">'+esc(b.name)+(b.verified?'<span class="ver">✓ ID verified</span>':'')+
+      (b.license?' · License '+esc(b.license)+(b.licenseState?' ('+esc(b.licenseState)+')':''):'')+'</p></div></div>'+
+      (b.bio?'<p class="bio">'+esc(b.bio)+'</p>':'')+'<div class="links">'+site+tel+'</div></div>';
+    h+='<h2>'+items.length+' business'+(items.length===1?'':'es')+' for sale</h2>';
+    if(items.length&&items.some(function(x){return x.lat!=null})) h+='<div class="bmap nomap" id="bmap"></div>';
+    h+=items.length?'<div class="lgrid">'+items.map(function(x){
+      return '<a class="lc" href="'+NOL.pageUrl(x)+'"><div class="im" style="background-image:'+photo(x,600,300)+'"></div><div class="bd"><b>'+esc(x.n)+'</b>'+
+        '<small>'+esc(x.loc)+' · '+esc(x.cat)+'</small><div class="nn"><div>Asking<em>'+money(x.ask)+'</em></div><div>Revenue<em>'+money(x.rev)+'</em></div><div>Cash flow<em>'+money(x.cf)+'</em></div></div></div></a>';
+    }).join('')+'</div>':'<div class="empty">No businesses listed right now. Check back soon.</div>';
+    page.innerHTML=h;
+    if(document.getElementById('bmap')){
+      try{ var m=NOMap.create(document.getElementById('bmap'),{wheelOnFocus:true,dragOnMobile:false});
+        var ms=NOMap.markers(m,items.map(function(x){return {lat:x.lat,lng:x.lng,label:money(x.ask),title:x.n}}),{popup:function(i){return NOL.popupHtml(items[i])}});
+        NOMap.fit(m,ms); NOMap.states(m,{count:function(ab){return items.filter(function(x){return /, ([A-Z]{2})$/.test(x.loc)&&RegExp.$1===ab}).length}}); }catch(e){}
+    }
+  }).catch(notFound);
+})();
+</script>
+</body>
+</html>
