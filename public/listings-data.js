@@ -45,5 +45,15 @@
       .then(function(d){return (d.listings||[]).map(fromApi)}).catch(function(){return []})
       .then(function(real){return {real:real,all:real.concat(real.length<MIN_SHOWN?EXAMPLES:[])}});
   }
-  window.NOL={EXAMPLES:EXAMPLES,MIN_SHOWN:MIN_SHOWN,gradFor:gradFor,esc:esc,money:money,safeImg:safeImg,photo:photo,fromApi:fromApi,load:load};
+  // A listing's own page.
+  function pageUrl(x){ return '/listing/'+encodeURIComponent(x.id); }
+  // The small card shown when a map pin is clicked.
+  function popupHtml(x){
+    return '<div class="popimg" style="background-image:'+photo(x,520,240)+'"><span>'+esc(x.example?'Example':x.cat)+'</span></div>'+
+      '<div class="popbody"><b>'+esc(x.n)+(x.v?'<span class="popver">✓ Verified</span>':'')+'</b>'+
+      '<div class="pl">'+esc(x.loc)+(x.example?'':' · '+esc(x.cat))+'</div>'+
+      '<div class="popnums"><div>Asking<em>'+money(x.ask)+'</em></div><div>Revenue<em>'+money(x.rev)+'</em></div><div>Cash flow<em>'+money(x.cf)+'</em></div></div>'+
+      '<a class="popgo" href="'+pageUrl(x)+'">View details</a></div>';
+  }
+  window.NOL={pageUrl:pageUrl,popupHtml:popupHtml,EXAMPLES:EXAMPLES,MIN_SHOWN:MIN_SHOWN,gradFor:gradFor,esc:esc,money:money,safeImg:safeImg,photo:photo,fromApi:fromApi,load:load};
 })();

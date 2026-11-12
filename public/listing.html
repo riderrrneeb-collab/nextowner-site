@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo-120.png">
+<title>Business for sale · NextOwner</title>
+<meta name="description" content="A small business for sale on NextOwner.">
+<link rel="stylesheet" href="/account.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/nomap.css">
+<style>
+  nav{max-width:1080px}
+  .navr{display:flex;gap:14px;align-items:center}
+  .navr .sellb{padding:9px 14px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
+  main.page{max-width:1080px;margin:0 auto 60px;padding:0 16px}
+  .crumbs{font-size:14px;margin:0 0 12px}
+  .crumbs a{color:var(--muted);text-decoration:none}
+  .crumbs a:hover{color:var(--accent)}
+  .gal{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:22px}
+  .mainph{position:relative;height:clamp(240px,46vw,480px);border-radius:26px;background-size:cover;background-position:center;box-shadow:var(--shadow);border:1px solid var(--edge)}
+  .mainph .tag{position:absolute;left:16px;top:16px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.9);color:#0f172a}
+  .mainph .count{position:absolute;right:16px;bottom:16px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;background:rgba(15,23,42,.7);color:#fff}
+  .thumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
+  .thumbs button{flex:0 0 auto;width:92px;height:64px;border-radius:12px;border:2px solid transparent;background-size:cover;background-position:center;cursor:pointer;padding:0}
+  .thumbs button.on{border-color:var(--accent)}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+  @media (max-width:880px){.cols{grid-template-columns:1fr}}
+  h1{font-size:clamp(28px,4.5vw,40px);margin:0 0 4px}
+  .ver{display:inline-block;margin-left:10px;font-size:14px;font-weight:600;color:var(--good);vertical-align:middle;letter-spacing:0}
+  .where{color:var(--muted);margin:0 0 18px;font-size:16px}
+  .exnote{padding:12px 16px;border-radius:16px;background:rgba(245,158,11,.12);color:var(--warn);font-size:14px;margin:0 0 18px}
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}
+  .nums div{padding:14px 16px;border-radius:18px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-size:13px}
+  .nums b{display:block;color:var(--ink);font-size:clamp(18px,3vw,24px);letter-spacing:-.02em;margin-top:2px}
+  .box{padding:22px;border-radius:24px;background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);margin-bottom:18px;
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+  .box h2{font-size:18px;margin:0 0 12px;letter-spacing:-.01em}
+  .desc{white-space:pre-wrap;line-height:1.65;margin:0;font-size:15.5px}
+  dl.facts{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:0;font-size:15px}
+  dl.facts dt{color:var(--muted)}
+  dl.facts dd{margin:0;font-weight:600}
+  .small{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .video{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000}
+  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .playb{position:absolute;inset:0;width:100%;border:0;background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+  .playb span{display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,.14)}
+  .lmap{height:260px;border-radius:18px;overflow:hidden}
+  .side{position:sticky;top:16px}
+  @media (max-width:880px){.side{position:static}}
+  .side .btn{margin-top:10px}
+  .cbox{margin-top:12px;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:15px;line-height:1.6}
+  .cbox a{color:var(--accent)}
+  .msgbig{text-align:center;padding:60px 20px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<nav><a class="logo" href="/">NextOwner</a>
+  <div class="navr"><a class="nl" data-auth-link href="/login">Log in</a><a class="sellb" href="/sell">List a business</a></div>
+</nav>
+<main class="page" id="page"><div class="msgbig" id="loading">Loading listing…</div></main>
+
+<script src="/categories.js"></script>
+<script src="/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/nomap.js"></script>
+<script src="/listings-data.js"></script>
+<script>
+(function(){
+  var esc=NOL.esc, money=NOL.money, photo=NOL.photo, page=document.getElementById('page');
+  var id=decodeURIComponent((location.pathname.match(/^\/listing\/([^\/?#]+)/)||[])[1]||new URLSearchParams(location.search).get('id')||'');
+
+  function notFound(){
+    document.title='Listing not found · NextOwner';
+    page.innerHTML='<div class="msgbig"><h1>Listing not found</h1><p class="sub">It may have sold or been taken down.</p>'+
+      '<a class="btn" style="max-width:280px" href="/#browse">Browse businesses for sale</a></div>';
+  }
+
+  // YouTube and Vimeo links play on the page; anything else opens in a new tab.
+  function embedUrl(u){
+    var m=u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);
+    if(m) return 'https://www.youtube-nocookie.com/embed/'+m[1]+'?autoplay=1&rel=0';
+    m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if(m) return 'https://player.vimeo.com/video/'+m[1]+'?autoplay=1';
+    return '';
+  }
+
+  function render(x){
+    document.title=x.n+' for sale in '+x.loc+' · NextOwner';
+    var photos=(x.photos&&x.photos.length)?x.photos.map(function(u){return 'url('+u+')'}):[photo(x,1600,800)];
+    var multiple=x.cf>0?(x.ask/x.cf):null, margin=x.rev>0?(x.cf/x.rev):null;
+    var facts=[];
+    facts.push(['Business type',x.cat]);
+    facts.push(['Location',x.loc]);
+    if(x.year) facts.push(['Established',x.year]);
+    if(x.emp!=null&&x.emp!=='') facts.push(['Employees',x.emp]);
+    if(x.reason) facts.push(['Reason for selling',x.reason]);
+    if(multiple) facts.push(['Price to cash flow',multiple.toFixed(1)+'× (about '+multiple.toFixed(1)+' years to earn back the price)']);
+    if(margin) facts.push(['Cash flow margin',Math.round(margin*100)+'% of revenue']);
+
+    var h='';
+    h+='<p class="crumbs"><a href="/#browse">← All businesses</a> · <a href="/map">Map</a></p>';
+    h+='<div class="gal"><div class="mainph" id="mainph" style="background-image:'+photos[0]+'"><span class="tag">'+esc(x.example?'Example listing':x.cat)+'</span>'+
+       (photos.length>1?'<span class="count" id="phc">1 / '+photos.length+'</span>':'')+'</div>';
+    if(photos.length>1){
+      h+='<div class="thumbs" id="thumbs">'+photos.map(function(p,i){return '<button type="button" class="'+(i?'':'on')+'" data-i="'+i+'" style="background-image:'+p+'" aria-label="Photo '+(i+1)+'"></button>'}).join('')+'</div>';
+    }
+    h+='</div><div class="cols"><div>';
+    h+='<h1>'+esc(x.n)+(x.v?'<span class="ver">✓ Verified seller</span>':'')+'</h1><p class="where">'+esc(x.loc)+' · '+esc(x.cat)+'</p>';
+    if(x.example) h+='<div class="exnote">This is an example listing that shows how NextOwner works. It is not a real business for sale.</div>';
+    h+='<div class="nums"><div>Asking price<b>'+money(x.ask)+'</b></div><div>Yearly revenue<b>'+money(x.rev)+'</b></div><div>Yearly cash flow<b>'+money(x.cf)+'</b></div></div>';
+    h+='<section class="box"><h2>About the business</h2><p class="desc">'+esc(x.d||'')+'</p></section>';
+    if(x.video){
+      h+='<section class="box"><h2>Video tour</h2>'+(embedUrl(x.video)
+        ?'<div class="video" id="video"><button type="button" class="playb" id="play"><span>▶ Play video tour</span></button></div>'
+        :'<a class="btn sec" href="'+esc(x.video)+'" target="_blank" rel="noopener">▶ Watch the video tour</a>')+'</section>';
+    }
+    h+='<section class="box"><h2>Details</h2><dl class="facts">'+facts.map(function(f){return '<dt>'+esc(f[0])+'</dt><dd>'+esc(f[1])+'</dd>'}).join('')+'</dl>'+
+       '<p class="small">Figures come from the seller and have not been checked by NextOwner. Review the financial records before you buy.</p></section>';
+    if(x.lat!=null&&x.lng!=null) h+='<section class="box"><h2>Location</h2><div class="lmap nomap" id="lmap"></div><p class="small">Approximate area, based on the ZIP code.</p></section>';
+    h+='</div><aside class="side"><section class="box"><h2>Interested?</h2>'+
+       '<p class="sub" style="margin:0">Asking <b style="color:var(--ink)">'+money(x.ask)+'</b>'+(x.v?' · <span style="color:var(--good)">ID-verified seller</span>':'')+'</p>'+
+       '<button type="button" class="btn" id="contact">Contact seller</button>'+
+       '<button type="button" class="btn sec" id="share">Share this listing</button>'+
+       '<div class="cbox" id="cbox" hidden></div></section>'+
+       '<section class="box"><h2>Selling a business?</h2><p class="sub" style="margin:0 0 4px">List yours free and reach buyers near you.</p><a class="btn sec" href="/sell">List your business</a></section></aside></div>';
+    page.innerHTML=h;
+
+    var th=document.getElementById('thumbs');
+    if(th) th.addEventListener('click',function(e){
+      var b=e.target.closest('button[data-i]'); if(!b)return; var i=+b.dataset.i;
+      document.getElementById('mainph').style.backgroundImage=photos[i];
+      document.getElementById('phc').textContent=(i+1)+' / '+photos.length;
+      [].forEach.call(th.children,function(c){c.classList.toggle('on',c===b)});
+    });
+    var play=document.getElementById('play');
+    if(play) play.addEventListener('click',function(){
+      document.getElementById('video').innerHTML='<iframe src="'+embedUrl(x.video)+'" title="Video tour" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    });
+    if(document.getElementById('lmap')){
+      try{
+        var m=NOMap.create(document.getElementById('lmap'),{wheelOnFocus:true,dragOnMobile:false});
+        m.setView([x.lat,x.lng],11);
+        NOMap.markers(m,[{lat:x.lat,lng:x.lng,label:money(x.ask),title:x.n}],{});
+      }catch(e){}
+    }
+    var cbox=document.getElementById('cbox');
+    function note(html){cbox.innerHTML=html;cbox.hidden=false}
+    document.getElementById('contact').addEventListener('click',function(){
+      if(x.example){note('This is an example listing, so there\'s no seller to contact. Real listings show the seller\'s details here.');return}
+      NO.session().then(function(s){
+        if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+        note('Loading contact details…');
+        return NO.api('/api/contact/'+encodeURIComponent(x.id)).then(function(c){
+          var subj=encodeURIComponent('NextOwner: '+x.n);
+          note((c.name?'<b>'+esc(c.name)+'</b><br>':'')+
+            '<a href="mailto:'+esc(c.email)+'?subject='+subj+'">'+esc(c.email)+'</a>'+
+            (c.phone?'<br><a href="tel:'+esc(c.phone.replace(/[^\d+]/g,''))+'">'+esc(c.phone)+'</a>':'')+
+            '<br><small style="color:var(--muted)">Mention you found them on NextOwner.</small>');
+        });
+      }).catch(function(err){note(esc(err.message||'Could not load contact details.'))});
+    });
+    document.getElementById('share').addEventListener('click',function(){
+      var url=location.origin+NOL.pageUrl(x);
+      if(navigator.share){ navigator.share({title:x.n+' for sale',url:url}).catch(function(){}); return; }
+      (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(function(){note('Link copied.')},function(){note(esc(url))});
+    });
+  }
+
+  if(/^ex-\d+$/.test(id)){
+    var ex=NOL.EXAMPLES.filter(function(x){return x.id===id})[0];
+    return ex?render(ex):notFound();
+  }
+  if(!id) return notFound();
+  fetch('/api/listings/'+encodeURIComponent(id)).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(d){ render(NOL.fromApi(d.listing)); }).catch(notFound);
+})();
+</script>
+</body>
+</html>

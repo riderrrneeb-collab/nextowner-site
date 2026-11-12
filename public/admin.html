@@ -70,7 +70,7 @@
         '<div class="acts">'+
           '<button type="button" class="'+(l.verified?'':'go')+'" data-act="verify">'+(l.verified?'Remove badge (override)':'Add badge (override)')+'</button>'+
           '<button type="button" data-act="hide">'+(l.status==='hidden'?'Unhide':'Hide')+'</button>'+
-          '<a href="/?listing='+l.id+'">View</a><a href="/sell?id='+l.id+'">Edit</a>'+
+          '<a href="/listing/'+l.id+'">View</a><a href="/sell?id='+l.id+'">Edit</a>'+
           '<button type="button" class="bad" data-act="delete">Delete</button></div></div>';
     }).join('');
   }

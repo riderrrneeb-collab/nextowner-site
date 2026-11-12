@@ -97,6 +97,8 @@
   .btn2.pri{background:var(--accent);color:#fff}
   .btn2.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
   .sheet .x{background:rgba(255,255,255,.85);color:#0f172a;z-index:2}
+  .fullpage{display:block;text-align:center;margin-top:14px;color:var(--accent);font-weight:600;font-size:14px;text-decoration:none}
+  .fullpage:hover{text-decoration:underline}
   .chip.on{background:var(--accent);color:#fff;border-color:transparent}
 
   .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
@@ -355,6 +357,7 @@
       <button type="button" class="btn2 pri" id="dContact">Contact seller</button>
       <button type="button" class="btn2 sec" id="dVideo">Watch video tour</button>
     </div>
+    <a class="fullpage" id="dPage" href="#">Open the full listing page →</a>
   </div>
 </div>
 
@@ -483,7 +486,7 @@
       g.appendChild(c); x.card=c;
     });
     marks=map?NOMap.markers(map,L.map(function(x){return {lat:x.lat,lng:x.lng,label:money(x.ask),title:x.n+', asking '+money(x.ask)}}),{
-      click:function(i){ openDetail(i); },
+      popup:function(i){ return NOL.popupHtml(L[i]); },
       hover:function(i,on){ hl(i,on); }
     }):[];
     L.forEach(function(x,i){ x.pin=marks[i]||null; });
@@ -553,6 +556,7 @@
     document.getElementById('dFacts').innerHTML=f.join('');
     document.getElementById('dDesc').textContent=x.example?x.d+' (Example listing.)':x.d;
     document.getElementById('dVideo').hidden=!(x.example||x.video);
+    document.getElementById('dPage').href=NOL.pageUrl(x);
     cbox.hidden=true; cbox.innerHTML='';
     document.body.classList.add('detail','locked');
     if(!x.example) try{history.replaceState(null,'','/?listing='+x.id)}catch(e){}

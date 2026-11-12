@@ -84,14 +84,7 @@
   if(qs.get('cat')){ catSel.value=qs.get('cat'); if(catSel.value) filter='cat:'+catSel.value; }
   else if(qs.get('f')) filter=qs.get('f');
 
-  function popup(i){
-    var x=items[i];
-    return '<div class="popimg" style="background-image:'+photo(x,520,240)+'"><span>'+esc(x.example?'Example':x.cat)+'</span></div>'+
-      '<div class="popbody"><b>'+esc(x.n)+(x.v?'<span class="popver">✓ Verified</span>':'')+'</b>'+
-      '<div class="pl">'+esc(x.loc)+(x.example?'':' · '+esc(x.cat))+'</div>'+
-      '<div class="popnums"><div>Asking<em>'+money(x.ask)+'</em></div><div>Revenue<em>'+money(x.rev)+'</em></div><div>Cash flow<em>'+money(x.cf)+'</em></div></div>'+
-      '<a class="popgo" href="/?listing='+encodeURIComponent(x.id)+'">View details</a></div>';
-  }
+  function popup(i){ return NOL.popupHtml(items[i]); }
 
   function apply(refit){
     var t=q.value.trim().toLowerCase(), n=0;

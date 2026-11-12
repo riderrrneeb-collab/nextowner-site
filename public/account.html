@@ -73,7 +73,7 @@
         var st=l.status==='hidden'?STATUS.hidden:(l.status==='draft'?STATUS.draft:(l.active?STATUS.live:STATUS.offline));
         h+='<div class="plan"><div><b>'+esc(l.name)+'</b><small>'+esc(l.city+', '+l.state)+' · Asking $'+Number(l.ask).toLocaleString()+
           (l.verified?' · ✓ Verified':'')+'</small>'+
-          '<small class="lact">'+(l.status==='live'&&l.active?'<a href="/?listing='+l.id+'">View</a> · ':'')+'<a href="/sell?id='+l.id+'">'+(l.status==='draft'?'Finish and publish':'Edit')+'</a></small></div>'+
+          '<small class="lact">'+(l.status==='live'&&l.active?'<a href="/listing/'+l.id+'">View</a> · ':'')+'<a href="/sell?id='+l.id+'">'+(l.status==='draft'?'Finish and publish':'Edit')+'</a></small></div>'+
           '<span class="pill '+st[0]+'">'+st[1]+'</span></div>';
       });
       h+='</div>';
