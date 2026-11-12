@@ -172,6 +172,21 @@
     setTimeout(function () { box.classList.add("show"); }, 1200);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", betaNotice); else betaNotice();
+
+  // Privacy Policy / Terms links at the bottom of every page.
+  function legalFooter() {
+    if (document.querySelector(".legalfoot")) return;
+    if (!document.querySelector('link[href="/legal.css"]')) {
+      var l = document.createElement("link"); l.rel = "stylesheet"; l.href = "/legal.css"; document.head.appendChild(l);
+    }
+    var f = document.createElement("footer");
+    f.className = "legalfoot";
+    f.innerHTML = "© " + new Date().getFullYear() + " NextOwner" +
+      '<br><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>' +
+      '<a href="mailto:mynextownerofficial@gmail.com">Contact</a>';
+    document.body.appendChild(f);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", legalFooter); else legalFooter();
   // Keep "Log in" / "Account" in sync if the person signs in from another tab.
   window.addEventListener("focus", updateNav);
   window.addEventListener("storage", function (e) { if (e.key && e.key.indexOf("sb-") === 0) updateNav(); });
