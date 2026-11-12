@@ -99,7 +99,7 @@
     });
     countEl.textContent=n+(n===1?' business':' businesses');
     note.hidden=n>0; note.textContent='No businesses match. Try another filter or search.';
-    if(refit) NOMap.fit(map,marks,{animate:true});
+    if(refit) NOMap.fit(map,marks,{animate:true,paddingTopLeft:[36,130],paddingBottomRight:[60,24]});
     document.querySelectorAll('.chip[data-f]').forEach(function(o){ o.classList.toggle('on',o.dataset.f===filter); });
     catSel.classList.toggle('on',filter.indexOf('cat:')===0);
   }
@@ -109,7 +109,7 @@
   });
   catSel.addEventListener('change',function(){ filter=catSel.value?'cat:'+catSel.value:'all'; apply(true); });
   var tq=0; q.addEventListener('input',function(){ clearTimeout(tq); tq=setTimeout(function(){apply(true)},300); });
-  document.getElementById('fit').addEventListener('click',function(){ NOMap.fit(map,marks,{animate:true}); });
+  document.getElementById('fit').addEventListener('click',function(){ NOMap.fit(map,marks,{animate:true,paddingTopLeft:[36,130],paddingBottomRight:[60,24]}); });
 
   NOL.load().then(function(d){
     items=d.all;
