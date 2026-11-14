@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo-120.png">
+<title>Get alerts for businesses for sale · NextOwner</title>
+<meta name="description" content="Get an email when a business for sale in your area and price range is listed on NextOwner. Free, one email a day at most.">
+<link rel="stylesheet" href="/account.css">
+<style>
+  .eyebrow{display:inline-block;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--accent);margin-bottom:12px}
+  h1 em{font-style:normal;background:linear-gradient(90deg,#0a84ff,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:520px){.f2{grid-template-columns:1fr}}
+  .fld{margin-bottom:12px}
+  .fld input,.fld select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:16px}
+  .fld input:focus,.fld select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .done{text-align:center;padding:10px 0}
+  .done .ic{width:56px;height:56px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:26px;
+    background:linear-gradient(135deg,#0a84ff,#7c5cff);color:#fff}
+  .fine{color:var(--muted);font-size:12.5px;margin-top:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<nav><a class="logo" href="/">NextOwner</a><a class="nl" data-auth-link href="/login">Log in</a></nav>
+<main>
+  <div class="panel" id="formWrap">
+    <span class="eyebrow">🔔 Buyer alerts</span>
+    <h1>Be first to see the <em>right business</em>.</h1>
+    <p class="sub">Tell us what you're looking for. When a matching business is listed, we'll email you. Free, one email a day at most, unsubscribe anytime.</p>
+    <form id="f" novalidate>
+      <div class="fld"><label for="email">Email</label><input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com"></div>
+      <div class="f2">
+        <div class="fld"><label for="state">State</label><select id="state" name="state"><option value="">Anywhere in the US</option></select></div>
+        <div class="fld"><label for="city">City <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="city" name="city" maxlength="60" placeholder="e.g. Denver"></div>
+      </div>
+      <div class="fld"><label for="category">Business type</label><select id="category" name="category"><option value="">Any type</option></select></div>
+      <div class="f2">
+        <div class="fld"><label for="min">Min price</label><select id="min" name="min"><option value="">No minimum</option></select></div>
+        <div class="fld"><label for="max">Max price</label><select id="max" name="max"><option value="">No maximum</option></select></div>
+      </div>
+      <button class="btn" id="go" type="submit">Turn on alerts</button>
+      <div class="msg" id="msg"></div>
+      <p class="fine">We'll send one email to confirm. We only use your email for these alerts and never share it. See our <a href="/privacy">Privacy Policy</a>.</p>
+    </form>
+  </div>
+  <div class="panel done" id="doneWrap" hidden>
+    <div class="ic">✓</div>
+    <h1 style="font-size:28px">Check your email</h1>
+    <p class="sub">We sent a confirmation link to <b id="sentTo"></b>. Tap it to turn on your alert. If you don't see it, check spam or promotions.</p>
+    <a class="btn" href="/#browse">Browse businesses for sale</a>
+  </div>
+</main>
+<script src="/categories.js"></script>
+<script src="/auth.js"></script>
+<script>
+(function(){
+  // Signup goes to the NextOwner alerts service (Google Apps Script web app).
+  var ENDPOINT='https://script.google.com/macros/s/AKfycbwDwIShqABDhLnEhLg1X8wRBuUOS5hUCPTPzB3_RbICGbB8hpWqLK-NfjY9YYSu9qSfrg/exec';
+  var STATES=[['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],['CO','Colorado'],['CT','Connecticut'],['DE','Delaware'],['DC','District of Columbia'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],['NE','Nebraska'],['NV','Nevada'],['NH','New Hampshire'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],['PA','Pennsylvania'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']];
+  var PRICES=[50000,100000,250000,500000,1000000,2000000,5000000];
+  function add(sel,v,t){var o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o);}
+  var st=document.getElementById('state'),cat=document.getElementById('category'),mn=document.getElementById('min'),mx=document.getElementById('max');
+  STATES.forEach(function(s){add(st,s[0],s[1]);});
+  (window.NO_CATEGORIES||[]).forEach(function(c){ if(c[0]!=='Other') add(cat,c[0],c[0]); });
+  PRICES.forEach(function(p){var t='$'+(p>=1e6?(p/1e6)+'M':(p/1e3)+'K');add(mn,p,t);add(mx,p,t);});
+  var qs=new URLSearchParams(location.search);
+  if(qs.get('state')) st.value=qs.get('state').toUpperCase();
+  if(qs.get('cat')) cat.value=qs.get('cat');
+  if(qs.get('city')) document.getElementById('city').value=qs.get('city');
+  if(qs.get('max')) mx.value=qs.get('max');
+
+  var f=document.getElementById('f'),msg=document.getElementById('msg'),go=document.getElementById('go');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var email=document.getElementById('email').value.trim();
+    msg.className='msg'; msg.textContent='';
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ msg.className='msg err'; msg.textContent='Please enter a valid email.'; return; }
+    if(mn.value&&mx.value&&Number(mn.value)>Number(mx.value)){ msg.className='msg err'; msg.textContent='The minimum price is higher than the maximum.'; return; }
+    go.disabled=true; go.textContent='Sending…';
+    var body=new URLSearchParams(new FormData(f));
+    fetch(ENDPOINT,{method:'POST',mode:'no-cors',body:body}).then(function(){
+      document.getElementById('sentTo').textContent=email;
+      document.getElementById('formWrap').hidden=true; document.getElementById('doneWrap').hidden=false;
+    }).catch(function(){
+      go.disabled=false; go.textContent='Turn on alerts';
+      msg.className='msg err'; msg.textContent='Something went wrong. Please try again in a minute.';
+    });
+  });
+})();
+</script>
+</body>
+</html>

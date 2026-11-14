@@ -105,6 +105,11 @@
   .main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
   .mapband{position:relative;height:440px;border-radius:24px;overflow:hidden;border:1px solid var(--edge);box-shadow:var(--shadow);margin:0 0 18px}
   .mapband .nomap{position:absolute;inset:0}
+  .alertband{display:flex;align-items:center;gap:14px;margin:22px 0 0;padding:18px 20px;border-radius:22px;text-decoration:none;color:var(--ink);
+    background:var(--glass);border:1px solid var(--edge);box-shadow:var(--shadow);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
+  .alertband .ai{font-size:26px}.alertband span{font-size:15px;line-height:1.45;color:var(--muted)}.alertband b{color:var(--ink)}
+  .alertband .ag{margin-left:auto;white-space:nowrap;padding:10px 16px;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;font-size:14.5px}
+  @media (max-width:560px){.alertband{flex-wrap:wrap}.alertband .ag{margin-left:0}}
   .mapx{position:absolute;z-index:500;right:12px;top:12px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;
     background:rgba(15,23,42,.72);color:#fff;font-weight:600;font-size:13px;text-decoration:none;border:1px solid rgba(255,255,255,.25);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
@@ -336,6 +341,7 @@
         <a class="maptap" id="maptap" href="/map"><span>Tap to explore the map</span></a>
       </div>
       <div class="grid" id="grid"></div>
+      <a class="alertband" href="/alerts"><span class="ai">🔔</span><span><b>Not seeing the right business yet?</b><br>Get an email the day one is listed in your area and price range.</span><span class="ag">Get alerts →</span></a>
     </section>
   </div>
   <p class="credit">Example listings for preview only. Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</p>

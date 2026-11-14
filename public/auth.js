@@ -182,7 +182,7 @@
     var f = document.createElement("footer");
     f.className = "legalfoot";
     f.innerHTML = "© " + new Date().getFullYear() + " NextOwner" +
-      '<br><a href="/brokers">For brokers</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>' +
+      '<br><a href="/alerts">Get alerts</a><a href="/brokers">For brokers</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>' +
       '<a href="mailto:mynextownerofficial@gmail.com">Contact</a>';
     document.body.appendChild(f);
   }
